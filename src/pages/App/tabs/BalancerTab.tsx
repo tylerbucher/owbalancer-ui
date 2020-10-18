@@ -11,8 +11,22 @@ import {StyledTableRow} from "../../../components/CustomTable/CustomTable";
 import {StyledTableCell} from "../../../components/CustomTable/CustomTable";
 import TableCell from '@material-ui/core/TableCell';
 import TableRow from '@material-ui/core/TableRow';
-import MainBalancerTable from "../../../components/MainBalanceTable/MainBalanceTable";
+import MainBalancerTable, {
+    createData,
+    emptyRows,
+    insertBlankRow
+} from "../../../components/MainBalanceTable/MainBalanceTable";
 import MetadataDrawer from "../../../components/MetadataDrawer/MetadataDrawer";
+import VerifiedUserIcon from '@material-ui/icons/VerifiedUser';
+import DoneIcon from '@material-ui/icons/Done';
+import ClearIcon from '@material-ui/icons/Clear';
+import BasicPlayer from "../../../models/BasicPlayer";
+import TagPlayer, {tagPlayerEqual} from "../../../models/TagPlayer";
+import balance from "../../../rest/PostBalance";
+import {withSnackbar} from "notistack";
+import BalanceResponse from "../../../models/BalanceResponse";
+import {MetadataTableRow, createData as createMetaData} from "../../../components/MetadataTable/MetadataTable";
+import Pagination from '@material-ui/lab/Pagination';
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -41,38 +55,132 @@ const useStyles = makeStyles((theme: Theme) =>
             '& > *': {
                 marginBottom: theme.spacing(1),
             },
+            backgroundColor: theme.palette.type === 'dark' ? '#333' : '#fff'
+        },
+        fRight: {
+            display: "contents"
         }
     }),
 );
 
-const columns = [
-    {value:"Role", align:false},
-    {value:"Username", align:true},
-    {value:"Sr", align:true},
-    {value:"Tank", align:true},
-    {value:"DPS", align:true},
-    {value:"Support", align:true},
-];
-
-function createData(id: number, role: string, username: string, sr: number, tank: JSX.Element, dps: JSX.Element, support: JSX.Element) {
-    return {id, role, username, sr, tank, dps, support};
+interface BalanceTableRow {
+    id?: number;
+    role?: string;
+    username?: string;
+    sr?: number;
+    tank?: JSX.Element;
+    dps?: JSX.Element;
+    support?: JSX.Element;
 }
 
-const rows = [
-    createData(0, "Tank", "Anon", 4500, <i>t</i>, <i>t</i>, <i>t</i>),
-    createData(1, "Tank", "Anon", 4500, <i>t</i>, <i>t</i>, <i>t</i>),
-    createData(2, "DPS", "Anon", 4500, <i>t</i>, <i>t</i>, <i>t</i>),
-    createData(3, "DPS", "Anon", 4500, <i>t</i>, <i>t</i>, <i>t</i>),
-    createData(4, "Support", "Anon", 4500, <i>t</i>, <i>t</i>, <i>t</i>),
-    createData(5, "Support", "Anon", 4500, <i>t</i>, <i>t</i>, <i>t</i>),
-];
+function invertedUserList(userList: Array<BasicPlayer>): Array<TagPlayer> {
+    let iUserList = new Array<TagPlayer>();
+    userList.forEach((user)=>{
+        iUserList.push(new TagPlayer(user.id, user.discordName, user.discordName));
+        user.overwatchNames.forEach((name)=>{
+            if(name.toUpperCase() !== user.discordName.toUpperCase()) {
+                iUserList.push(new TagPlayer(user.id, name, user.discordName));
+            }
+        });
+    });
+    iUserList.sort((a, b)=>{
+        return a.discordName.localeCompare(b.discordName);
+    });
+    return iUserList;
+}
+
+function createMainTableRows(balanceResponse: BalanceResponse, users: Array<TagPlayer>,tableId: number, currentPage: number): Array<BalanceTableRow> {
+    let tblRows = new Array<BalanceTableRow>();
+    balanceResponse.balanceList[currentPage].sort((a, b)=>{
+        return a.position - b.position;
+    });
+    balanceResponse.balanceList[currentPage].forEach((player, index) =>{
+        if(player.team === tableId) {
+            let user = users.find(tag => tag.id === player.user.id)
+            tblRows.push(
+                createData(
+                    index,
+                    player.getPositionName(),
+                    user !== undefined ? user.overwatchName : player.user.name,
+                    player.getPositionSr(),
+                    player.getTankPosIcon(),
+                    player.getDpsPosIcon(),
+                    player.getSupportPosIcon()
+                )
+            );
+        }
+    });
+    while (tblRows.length !== 6) {
+        tblRows.push(insertBlankRow());
+    }
+    return tblRows;
+}
+
+function createMetaTableRows(balanceResponse: BalanceResponse, tableId: number, currentPage: number): Array<MetadataTableRow> {
+    let tblRows = new Array<MetadataTableRow>();
+    let metaResponse = balanceResponse.metadataList[currentPage];
+
+    if (tableId === 1) {
+        tblRows.push(createMetaData("Balance Score", metaResponse.balanceScore.toString()));
+    } else {
+        tblRows.push(createMetaData("Balance Time", metaResponse.balanceTime.toString()));
+    }
+    let currTeam = tableId === 1 ? metaResponse.team1AverageSr : metaResponse.team2AverageSr;
+    let otherTeam = tableId === 2 ? metaResponse.team1AverageSr : metaResponse.team2AverageSr;
+    let currTeamTotal = tableId === 1 ? metaResponse.team1TotalAverageSr : metaResponse.team2TotalAverageSr
+    let otherTeamTotal = tableId === 2 ? metaResponse.team1TotalAverageSr : metaResponse.team2TotalAverageSr
+
+    tblRows.push(createMetaData("Average SR", (tableId === 1 ? metaResponse.team1AverageSr : metaResponse.team2AverageSr).toString() + ` (Δ ${currTeam - otherTeam})`));
+    tblRows.push(createMetaData("└─ Total SR", (tableId === 1 ? metaResponse.team1TotalSr : metaResponse.team2TotalSr).toString()));
+    tblRows.push(createMetaData("Average SR (All roles)", (tableId === 1 ? metaResponse.team1TotalAverageSr : metaResponse.team2TotalAverageSr).toString() + ` (Δ ${currTeamTotal - otherTeamTotal})`));
+    tblRows.push(createMetaData("└─ Total SR (All roles)", (tableId === 1 ? metaResponse.team1TotalSrDistribution : metaResponse.team2TotalSrDistribution).toString()));
+    tblRows.push(createMetaData("Adaptability (How well the team can adapt to playing different roles)", (tableId === 1 ? metaResponse.team1Adaptability : metaResponse.team2Adaptability).toString()+"%"));
+    tblRows.push(createMetaData("├─ Tank Adaptability", (tableId === 1 ? metaResponse.team1TankAdaptability : metaResponse.team2TankAdaptability).toString() + "%"));
+    tblRows.push(createMetaData("├─ DPS Adaptability", (tableId === 1 ? metaResponse.team1DpsAdaptability : metaResponse.team2DpsAdaptability).toString() + "%"));
+    tblRows.push(createMetaData("└─ Support Adaptability", (tableId === 1 ? metaResponse.team1SupportAdaptability : metaResponse.team2SupportAdaptability).toString() + "%"));
+
+    return tblRows;
+}
 
 function BalancerTab(props: any) {
     const classes = useStyles();
-    const [open, setOpen] = React.useState(false);
 
-    const toggleDrawer = (open: boolean) => (event: React.MouseEvent) => {
+    const [open, setOpen] = React.useState(false);
+    const toggleDrawer = (open: boolean) => () => {
         setOpen(open);
+    };
+
+    const [numUsers, setNumUsers] = React.useState(0);
+    const [users, setUsers] = React.useState(new Array<TagPlayer>());
+    const [currentPage, setCurrentPage] = React.useState(1);
+    const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
+        if(balanceResponse !== undefined) {
+            setCurrentPage(value);
+
+            setCurrentTable1Rows(createMainTableRows(balanceResponse, users, 1, currentPage-1));
+            setCurrentTable2Rows(createMainTableRows(balanceResponse, users, 2, currentPage-1));
+
+            setCurrentMeta1Rows(createMetaTableRows(balanceResponse, 1, currentPage-1));
+            setCurrentMeta2Rows(createMetaTableRows(balanceResponse, 2, currentPage-1));
+        }
+    };
+
+    const [currentTable1Rows, setCurrentTable1Rows] = React.useState<Array<BalanceTableRow>>(emptyRows);
+    const [currentTable2Rows, setCurrentTable2Rows] = React.useState<Array<BalanceTableRow>>(emptyRows);
+
+    const [currentMeta1Rows, setCurrentMeta1Rows] = React.useState<Array<MetadataTableRow>>(new Array<MetadataTableRow>());
+    const [currentMeta2Rows, setCurrentMeta2Rows] = React.useState<Array<MetadataTableRow>>(new Array<MetadataTableRow>());
+
+    const [balanceResponse, setBalanceResponse] = React.useState<BalanceResponse>();
+    const setResponse = (balanceResponse: BalanceResponse) => {
+        setBalanceResponse(balanceResponse);
+        setCurrentPage(1);
+
+        setCurrentTable1Rows(createMainTableRows(balanceResponse, users, 1, currentPage-1));
+        setCurrentTable2Rows(createMainTableRows(balanceResponse, users, 2, currentPage-1));
+
+        setCurrentMeta1Rows(createMetaTableRows(balanceResponse, 1, currentPage-1));
+        setCurrentMeta2Rows(createMetaTableRows(balanceResponse, 2, currentPage-1));
     };
 
     return (
@@ -83,150 +191,56 @@ function BalancerTab(props: any) {
                         <Autocomplete
                             multiple
                             id="tags-outlined"
-                            options={top100Films}
-                            getOptionLabel={(option) => option.title}
-                            defaultValue={[top100Films[13]]}
-                            filterSelectedOptions
+                            options={invertedUserList(props.basicUserList)}
+                            getOptionLabel={(option: TagPlayer) => option.overwatchName}
+                            groupBy={(option: TagPlayer) => option.discordName}
+                            value={users}
+                            getOptionSelected={((option, value) => {return tagPlayerEqual(option, value)})}
+                            filterSelectedOptions={true}
                             renderInput={(params) => (
                                 <TextField
                                     {...params}
                                     variant="outlined"
-                                    label="filterSelectedOptions (12)"
-                                    placeholder="Favorites"
+                                    label={`Selected Users (${numUsers})`}
+                                    placeholder="Selected Users"
                                 />
                             )}
+                            onChange={(event, value)=>{
+                                setNumUsers(value.length);
+                                setUsers(value);
+                            }}
                         />
                     </Grid>
                 </Grid>
                 <Grid container spacing={1} justify="center">
                     <Grid item xs={12}>
-                        <Button variant="contained" color="primary" fullWidth>
+                        <Button variant="contained" color="primary" fullWidth onClick={()=>{balance(users, props, setResponse)}}>
                             Balance
                         </Button>
                     </Grid>
                 </Grid>
                 <Grid container spacing={1} justify="center">
                     <Grid item xs={6}>
-                        <MainBalancerTable columns={columns} rows={rows} />
+                        <MainBalancerTable rows={currentTable1Rows} />
                     </Grid>
                     <Grid item xs={6}>
-                        <MainBalancerTable columns={columns} rows={rows} />
+                        <MainBalancerTable rows={currentTable2Rows} />
                     </Grid>
                 </Grid>
-                <Grid container spacing={1} justify="flex-start">
+                <Grid container spacing={1} justify="space-between" direction="row">
                     <Grid item xs={6}>
                         <Button variant="contained" color="secondary" onClick={toggleDrawer(true)}>
                             Balancer Metadata
                         </Button>
                     </Grid>
+                    <Grid item xs={6} className={classes.fRight}>
+                        <Pagination count={5} shape="rounded" page={currentPage} onChange={handlePageChange}/>
+                    </Grid>
                 </Grid>
             </Paper>
-            <MetadataDrawer open={open} handleClose={toggleDrawer(false)}/>
+            <MetadataDrawer open={open} handleClose={toggleDrawer(false)} table1Rows={currentMeta1Rows} table2Rows={currentMeta2Rows}/>
         </Container>
     );
 }
 
-const top100Films = [
-    {title: 'The Shawshank Redemption', year: 1994},
-    {title: 'The Godfather', year: 1972},
-    {title: 'The Godfather: Part II', year: 1974},
-    {title: 'The Dark Knight', year: 2008},
-    {title: '12 Angry Men', year: 1957},
-    {title: "Schindler's List", year: 1993},
-    {title: 'Pulp Fiction', year: 1994},
-    {title: 'The Lord of the Rings: The Return of the King', year: 2003},
-    {title: 'The Good, the Bad and the Ugly', year: 1966},
-    {title: 'Fight Club', year: 1999},
-    {title: 'The Lord of the Rings: The Fellowship of the Ring', year: 2001},
-    {title: 'Star Wars: Episode V - The Empire Strikes Back', year: 1980},
-    {title: 'Forrest Gump', year: 1994},
-    {title: 'Inception', year: 2010},
-    {title: 'The Lord of the Rings: The Two Towers', year: 2002},
-    {title: "One Flew Over the Cuckoo's Nest", year: 1975},
-    {title: 'Goodfellas', year: 1990},
-    {title: 'The Matrix', year: 1999},
-    {title: 'Seven Samurai', year: 1954},
-    {title: 'Star Wars: Episode IV - A New Hope', year: 1977},
-    {title: 'City of God', year: 2002},
-    {title: 'Se7en', year: 1995},
-    {title: 'The Silence of the Lambs', year: 1991},
-    {title: "It's a Wonderful Life", year: 1946},
-    {title: 'Life Is Beautiful', year: 1997},
-    {title: 'The Usual Suspects', year: 1995},
-    {title: 'Léon: The Professional', year: 1994},
-    {title: 'Spirited Away', year: 2001},
-    {title: 'Saving Private Ryan', year: 1998},
-    {title: 'Once Upon a Time in the West', year: 1968},
-    {title: 'American History X', year: 1998},
-    {title: 'Interstellar', year: 2014},
-    {title: 'Casablanca', year: 1942},
-    {title: 'City Lights', year: 1931},
-    {title: 'Psycho', year: 1960},
-    {title: 'The Green Mile', year: 1999},
-    {title: 'The Intouchables', year: 2011},
-    {title: 'Modern Times', year: 1936},
-    {title: 'Raiders of the Lost Ark', year: 1981},
-    {title: 'Rear Window', year: 1954},
-    {title: 'The Pianist', year: 2002},
-    {title: 'The Departed', year: 2006},
-    {title: 'Terminator 2: Judgment Day', year: 1991},
-    {title: 'Back to the Future', year: 1985},
-    {title: 'Whiplash', year: 2014},
-    {title: 'Gladiator', year: 2000},
-    {title: 'Memento', year: 2000},
-    {title: 'The Prestige', year: 2006},
-    {title: 'The Lion King', year: 1994},
-    {title: 'Apocalypse Now', year: 1979},
-    {title: 'Alien', year: 1979},
-    {title: 'Sunset Boulevard', year: 1950},
-    {title: 'Dr. Strangelove or: How I Learned to Stop Worrying and Love the Bomb', year: 1964},
-    {title: 'The Great Dictator', year: 1940},
-    {title: 'Cinema Paradiso', year: 1988},
-    {title: 'The Lives of Others', year: 2006},
-    {title: 'Grave of the Fireflies', year: 1988},
-    {title: 'Paths of Glory', year: 1957},
-    {title: 'Django Unchained', year: 2012},
-    {title: 'The Shining', year: 1980},
-    {title: 'WALL·E', year: 2008},
-    {title: 'American Beauty', year: 1999},
-    {title: 'The Dark Knight Rises', year: 2012},
-    {title: 'Princess Mononoke', year: 1997},
-    {title: 'Aliens', year: 1986},
-    {title: 'Oldboy', year: 2003},
-    {title: 'Once Upon a Time in America', year: 1984},
-    {title: 'Witness for the Prosecution', year: 1957},
-    {title: 'Das Boot', year: 1981},
-    {title: 'Citizen Kane', year: 1941},
-    {title: 'North by Northwest', year: 1959},
-    {title: 'Vertigo', year: 1958},
-    {title: 'Star Wars: Episode VI - Return of the Jedi', year: 1983},
-    {title: 'Reservoir Dogs', year: 1992},
-    {title: 'Braveheart', year: 1995},
-    {title: 'M', year: 1931},
-    {title: 'Requiem for a Dream', year: 2000},
-    {title: 'Amélie', year: 2001},
-    {title: 'A Clockwork Orange', year: 1971},
-    {title: 'Like Stars on Earth', year: 2007},
-    {title: 'Taxi Driver', year: 1976},
-    {title: 'Lawrence of Arabia', year: 1962},
-    {title: 'Double Indemnity', year: 1944},
-    {title: 'Eternal Sunshine of the Spotless Mind', year: 2004},
-    {title: 'Amadeus', year: 1984},
-    {title: 'To Kill a Mockingbird', year: 1962},
-    {title: 'Toy Story 3', year: 2010},
-    {title: 'Logan', year: 2017},
-    {title: 'Full Metal Jacket', year: 1987},
-    {title: 'Dangal', year: 2016},
-    {title: 'The Sting', year: 1973},
-    {title: '2001: A Space Odyssey', year: 1968},
-    {title: "Singin' in the Rain", year: 1952},
-    {title: 'Toy Story', year: 1995},
-    {title: 'Bicycle Thieves', year: 1948},
-    {title: 'The Kid', year: 1921},
-    {title: 'Inglourious Basterds', year: 2009},
-    {title: 'Snatch', year: 2000},
-    {title: '3 Idiots', year: 2009},
-    {title: 'Monty Python and the Holy Grail', year: 1975},
-];
-
-export default BalancerTab;
+export default withSnackbar(BalancerTab);

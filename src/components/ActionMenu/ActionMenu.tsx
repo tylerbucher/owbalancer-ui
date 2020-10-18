@@ -36,15 +36,8 @@ function ActionMenu(props: any) {
     const classes = useStyles();
     const [open, setOpen] = React.useState(false);
 
-    const [plDiagOpen, setPlDiagOpen] = React.useState(false);
-    const handleClosePlyDiag = () => {
-        setPlDiagOpen(false);
-    };
-
-    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-
     const actions = [
-        {icon: <RefreshIcon/>, name: 'Refresh', action: function (props:any){refreshPlayers(true, props);}},
+        {icon: <RefreshIcon/>, name: 'Refresh', action: function (props:any){props.onUserListUpdate()}},
         {icon: <Brightness2Icon/>, name: 'Dark Mode', action: function (props:any){changeDarkMode(props.parentStateChange);}},
     ];
 

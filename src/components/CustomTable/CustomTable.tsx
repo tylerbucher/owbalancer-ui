@@ -31,7 +31,7 @@ export const StyledTableRow = withStyles((theme: Theme) =>
         root: {
             '&:nth-of-type(odd)': {
                 backgroundColor: theme.palette.action.hover,
-            },
+            }
         },
     }),
 )(TableRow);

@@ -12,7 +12,8 @@ import InboxIcon from '@material-ui/icons/MoveToInbox';
 import MailIcon from '@material-ui/icons/Mail';
 import Grid from "@material-ui/core/Grid";
 import MainBalancerTable from "../MainBalanceTable/MainBalanceTable";
-import MetadataTable from "../MetadataTable/MetadataTable";
+import MetadataTable, {MetadataTableRow} from "../MetadataTable/MetadataTable";
+import MetadataResponse from "../../models/MetadataResponse";
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -27,25 +28,11 @@ const columns = [
     {value:"Value", align:false},
 ];
 
-function createData(key: string, value: string) {
-    return {key, value};
-}
-
-const rows = [
-    createData("Balance Score", "13.619318"),
-    createData("Average SR", "2438 (Δ -126)"),
-    createData("└─ Total SR", "14631"),
-    createData("Average SR (All roles)", "2299 (Δ -146)"),
-    createData("└─ Total SR (All roles)", "41385"),
-    createData("Adaptability (How well the team can adapt to playing different roles)", "50%"),
-    createData("├─ Tank Adaptability", "41%"),
-    createData("├─ DPS Adaptability", "50%"),
-    createData("└─ Support Adaptability", "58%"),
-];
-
 interface MetadataDrawerProps {
     open: boolean;
     handleClose: any;
+    table1Rows: Array<MetadataTableRow>;
+    table2Rows: Array<MetadataTableRow>;
 }
 
 function MetadataDrawer(props: MetadataDrawerProps) {
@@ -55,10 +42,10 @@ function MetadataDrawer(props: MetadataDrawerProps) {
         <Drawer anchor={'bottom'} open={props.open} PaperProps={{className: classes.drawer}} onClose={props.handleClose}>
             <Grid container spacing={1} justify="center">
                 <Grid item xs={6}>
-                    <MetadataTable columns={columns} rows={rows} />
+                    <MetadataTable columns={columns} rows={props.table1Rows} />
                 </Grid>
                 <Grid item xs={6}>
-                    <MetadataTable columns={columns} rows={rows} />
+                    <MetadataTable columns={columns} rows={props.table2Rows} />
                 </Grid>
             </Grid>
         </Drawer>

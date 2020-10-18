@@ -14,6 +14,8 @@ import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
+import {PostNewUserRequest} from "../../../rest/PostNewUser";
+import {withSnackbar} from "notistack";
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -34,6 +36,7 @@ const useStyles = makeStyles((theme: Theme) =>
 function ManagePlayersTab(props: any) {
     const classes = useStyles();
     const [open, setOpen] = React.useState(false);
+    const [addPlayerRequest, setAddPlayerRequest] = React.useState<PostNewUserRequest>(new PostNewUserRequest());
 
     const handleClickOpen = () => {
         setOpen(true);
@@ -64,9 +67,9 @@ function ManagePlayersTab(props: any) {
                         />
                     </Grid>
                 </Grid>
-                <DiscordNameFormField className={classes.form}/>
-                <OverwatchNamesFormField className={classes.form}/>
-                <RolesFormField className={classes.form}/>
+                <DiscordNameFormField className={classes.form} setAddPlayerRequest={addPlayerRequest}/>
+                <OverwatchNamesFormField className={classes.form} setAddPlayerRequest={addPlayerRequest} submitCallBack={()=>{}}/>
+                <RolesFormField className={classes.form} setAddPlayerRequest={addPlayerRequest}/>
                 <Grid container spacing={1} justify="center">
                     <Grid item xs={3} className={classes.form}>
                         <Button variant="contained" color="secondary" fullWidth onClick={handleClickOpen}>
@@ -105,4 +108,4 @@ function ManagePlayersTab(props: any) {
     );
 }
 
-export default ManagePlayersTab;
+export default withSnackbar(ManagePlayersTab);

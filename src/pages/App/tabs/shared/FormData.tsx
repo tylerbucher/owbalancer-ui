@@ -1,4 +1,7 @@
 import React from "react";
+import ClearIcon from "@material-ui/icons/Clear";
+import DoneIcon from "@material-ui/icons/Done";
+import VerifiedUserIcon from "@material-ui/icons/VerifiedUser";
 
 export const DiscordNameHelperText = <i>The user's Discord username. Please refrain from adding the Discord id tag.
     (Example: TheLegend27, Not TheLegend27#1264)</i>;
@@ -16,18 +19,24 @@ export class RolePriority {
     readonly fullName: string;
     readonly shortName: string;
     readonly value: number;
+    readonly icon: JSX.Element;
 
 
-    constructor(fullName: string, shortName: string, value: number) {
+    constructor(fullName: string, shortName: string, value: number, icon: JSX.Element) {
         this.fullName = fullName;
         this.shortName = shortName;
         this.value = value;
+        this.icon = icon;
     }
 }
 
-export const PrimaryRolePriority = new RolePriority("Preferred", "PFD", 2);
-export const SecondaryRolePriority = new RolePriority("Fill", "FLL", 1);
-export const NonRolePriority = new RolePriority("Avoid", "AVD", 0);
+export const PrimaryRolePriority = new RolePriority("Preferred", "PFD", 2, <VerifiedUserIcon fontSize={'small'}/>);
+export const SecondaryRolePriority = new RolePriority("Fill", "FLL", 1, <DoneIcon fontSize={'small'}/>);
+export const NonRolePriority = new RolePriority("Avoid", "AVD", 0, <ClearIcon fontSize={'small'}/>);
+
+export const TankRoleDefault = 1;
+export const DpsRoleDefault = 1;
+export const SupportRoleDefault = 1;
 
 export const roleToolTip = `"${PrimaryRolePriority.fullName} (${PrimaryRolePriority.shortName})" is an option reserved for the role a player will want to primarily play or 
 insta-lock. "${SecondaryRolePriority.fullName} (${SecondaryRolePriority.shortName})" is a secondary option for players who can play another role if they can not play 

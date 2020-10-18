@@ -17,6 +17,8 @@ import {PrimaryRolePriority, SecondaryRolePriority, NonRolePriority, roleToolTip
 import RolesFormField from "./shared/RolesFormField";
 import DiscordNameFormField from "./shared/DiscordNameFormField";
 import OverwatchNamesFormField from "./shared/OverwatchNamesFormField";
+import postNewUser, {PostNewUserRequest} from "../../../rest/PostNewUser";
+import {withSnackbar} from "notistack";
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -34,12 +36,33 @@ const useStyles = makeStyles((theme: Theme) =>
     }),
 );
 
+class CallBacks {
+    public discordNameCallBack: any;
+    public owNamesCallBack: any;
+    public rolesCallBack: any;
+}
+
 function AddPlayerTab(props: any) {
     const classes = useStyles();
+    const [addPlayerRequest, setAddPlayerRequest] = React.useState<PostNewUserRequest>(new PostNewUserRequest());
+    const [callbacks, setCallbacks] = React.useState(new CallBacks());
+
+    const handleSubmit = () => {
+        postNewUser(addPlayerRequest, props);
+        if(callbacks.discordNameCallBack !== undefined) {
+            callbacks.discordNameCallBack();
+        }
+        if(callbacks.owNamesCallBack !== undefined) {
+            callbacks.owNamesCallBack();
+        }
+        if(callbacks.rolesCallBack !== undefined) {
+            callbacks.rolesCallBack();
+        }
+    };
 
     return (
         <Container maxWidth="md" className={classes.root}>
-            <form noValidate autoComplete="off" className={classes.form}>
+            <form noValidate autoComplete="off" className={classes.form} id={"asd"}>
                 <Grid container spacing={1} justify="center">
                     <Grid item xs={9} className={classes.form}>
                         <Typography variant="h4" gutterBottom>
@@ -47,12 +70,12 @@ function AddPlayerTab(props: any) {
                         </Typography>
                     </Grid>
                 </Grid>
-                <DiscordNameFormField className={classes.form}/>
-                <OverwatchNamesFormField className={classes.form} enableSecondHelperText/>
-                <RolesFormField className={classes.form}/>
+                <DiscordNameFormField className={classes.form} basicUserList={props.basicUserList} setAddPlayerRequest={addPlayerRequest} submitCallBack={callbacks}/>
+                <OverwatchNamesFormField className={classes.form} setAddPlayerRequest={addPlayerRequest} submitCallBack={callbacks} enableSecondHelperText/>
+                <RolesFormField className={classes.form} setAddPlayerRequest={addPlayerRequest} submitCallBack={callbacks}/>
                 <Grid container spacing={1} justify="center">
                     <Grid item xs={9} className={classes.form}>
-                        <Button variant="contained" color="primary" fullWidth>
+                        <Button variant="contained" color="primary" fullWidth onClick={handleSubmit}>
                             Submit
                         </Button>
                     </Grid>
@@ -62,4 +85,4 @@ function AddPlayerTab(props: any) {
     );
 }
 
-export default AddPlayerTab;
+export default withSnackbar(AddPlayerTab);

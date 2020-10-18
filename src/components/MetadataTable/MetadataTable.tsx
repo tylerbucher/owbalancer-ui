@@ -6,9 +6,13 @@ interface MetadataTableColumn {
     value: string;
 }
 
-interface MetadataTableRow {
+export interface MetadataTableRow {
     key: string;
     value: string;
+}
+
+export function createData(key: string, value: string) {
+    return {key, value};
 }
 
 interface MainBalanceTableProps {

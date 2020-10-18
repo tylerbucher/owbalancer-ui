@@ -4,10 +4,13 @@ import './index.css';
 import App from './pages/App/App';
 import * as serviceWorker from './serviceWorker';
 import 'fontsource-roboto';
+import {SnackbarProvider} from "notistack";
 
 ReactDOM.render(
     <React.StrictMode>
-        <App />
+        <SnackbarProvider maxSnack={3} preventDuplicate>
+            <App />
+        </SnackbarProvider>
     </React.StrictMode>,
     document.getElementById('root')
 );
