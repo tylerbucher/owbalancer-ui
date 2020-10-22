@@ -1,21 +1,21 @@
-import TablePlayer from "./TablePlayer";
-import MetadataResponse from "./MetadataResponse";
-import StatPlayer from "./StatPlayer";
+import TablePlayer from "../../models/TablePlayer";
+import MetadataResponse from "../../models/MetadataResponse";
+import StatPlayer from "../../models/StatPlayer";
 
-interface BalanceResponseApi {
+interface BalanceResponseModelApi {
     version: string;
     userList: Array<Array<TablePlayer>>;
     balancerMeta: Array<MetadataResponse>;
 }
 
-class BalanceResponse {
+export class BalanceResponseModel {
 
     public readonly version: string;
     public readonly balanceList: Array<Array<TablePlayer>>;
     public readonly metadataList: Array<MetadataResponse>;
 
     constructor(inputString: string) {
-        let jsonObj: BalanceResponseApi = JSON.parse(inputString);
+        let jsonObj: BalanceResponseModelApi = JSON.parse(inputString);
         this.version = jsonObj.version;
 
         this.balanceList = new Array<Array<TablePlayer>>();
@@ -39,5 +39,3 @@ class BalanceResponse {
         });
     }
 }
-
-export default BalanceResponse;

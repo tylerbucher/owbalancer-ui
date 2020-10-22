@@ -6,16 +6,22 @@ import {createStyles, makeStyles, Theme} from '@material-ui/core/styles';
 import Container from "@material-ui/core/Container";
 import Grid from '@material-ui/core/Grid';
 import Typography from "@material-ui/core/Typography";
-import RolesFormField from "./shared/RolesFormField";
-import DiscordNameFormField from "./shared/DiscordNameFormField";
-import OverwatchNamesFormField from "./shared/OverwatchNamesFormField";
+import RolesFormField from "../../../shared/forms/RolesFormField";
+import DiscordNameFormField from "../../../shared/forms/DiscordNameFormField";
+import OverwatchNamesFormField from "../../../shared/forms/OverwatchNamesFormField";
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
-import {PostNewUserRequest} from "../../../rest/PostNewUser";
 import {withSnackbar} from "notistack";
+import {invertedUserList} from "./BalancerTab";
+import {BasicTagPlayerModel, BasicTagPlayerModelApi} from "../../../shared/models/BasicTagPlayerModel";
+import getTotalUserInfoById from "../../../shared/rest/GetTotalUserInfoById";
+import {PostNewUserModel, PostNewUserModelApi} from "../../../shared/rest/models/PostNewUserModel";
+import {CompleteUserModel, CompleteUserModelApi} from "../../../shared/rest/models/CompleteUserModel";
+import postUserUpdate from "../../../shared/rest/PostUserUpdate";
+import deleteUser from "../../../shared/rest/DeleteUser";
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -33,10 +39,19 @@ const useStyles = makeStyles((theme: Theme) =>
     }),
 );
 
+class CallBacks {
+    public discordNameCallBack: any;
+    public owNamesCallBack: any;
+    public rolesCallBack: any;
+}
+
 function ManagePlayersTab(props: any) {
     const classes = useStyles();
     const [open, setOpen] = React.useState(false);
-    const [addPlayerRequest, setAddPlayerRequest] = React.useState<PostNewUserRequest>(new PostNewUserRequest());
+    const [autoValue, setAutoValue] = React.useState<BasicTagPlayerModelApi | null>(null);
+    const [disabled, setDisabled] = React.useState(true);
+    const [userModel, setUserModel] = React.useState<CompleteUserModelApi>(new CompleteUserModel());
+    const [callbacks] = React.useState(new CallBacks());
 
     const handleClickOpen = () => {
         setOpen(true);
@@ -44,6 +59,28 @@ function ManagePlayersTab(props: any) {
 
     const handleClose = () => {
         setOpen(false);
+    };
+    const handleDelete = () => {
+        setOpen(false);
+        deleteUser(userModel.id, props, refresh);
+        if(props.basicUserList.length > 0) {
+            let obj = new BasicTagPlayerModel(props.basicUserList[0].id, props.basicUserList[0].discordName, props.basicUserList[0].discordName)
+            setAutoValue(obj);
+            console.log(obj)
+            getTotalUserInfoById(props.basicUserList[0].id, props, setNewUserModel)
+            console.log(autoValue)
+        }
+    };
+    const handleSubmit = () => {
+        postUserUpdate(userModel, props, refresh);
+    };
+    const refresh = () => {
+        props.onUserListUpdate();
+    };
+
+    const setNewUserModel = (model: CompleteUserModelApi) => {
+        setUserModel(model);
+        setDisabled(false);
     };
 
     return (
@@ -60,16 +97,29 @@ function ManagePlayersTab(props: any) {
                     <Grid item xs={9} className={classes.form}>
                         <Autocomplete
                             id="combo-box-demo"
-                            options={new Array()}
-                            getOptionLabel={(option) => option.title}
+                            options={invertedUserList(props.basicUserList)}
+                            value={autoValue}
+                            getOptionLabel={(option: BasicTagPlayerModelApi) => option.overwatchName}
+                            groupBy={(option: BasicTagPlayerModelApi) => option.discordName}
                             renderInput={(params) => <TextField {...params} label="Select a user to edit"
                                                                 variant="outlined" autoFocus/>}
+                            onChange={(event, value: BasicTagPlayerModelApi | null)=>{
+                                setAutoValue(value);
+                                if(value !== null) {
+                                    getTotalUserInfoById(value.id, props, setNewUserModel);
+                                }
+                            }}
+                            getOptionSelected={((option, value) => {
+                                return BasicTagPlayerModel.equals(option, value)
+                            })}
+                            /*openOnFocus*/
+                            fullWidth
                         />
                     </Grid>
                 </Grid>
-                <DiscordNameFormField className={classes.form} setAddPlayerRequest={addPlayerRequest}/>
-                <OverwatchNamesFormField className={classes.form} setAddPlayerRequest={addPlayerRequest} submitCallBack={()=>{}}/>
-                <RolesFormField className={classes.form} setAddPlayerRequest={addPlayerRequest}/>
+                <DiscordNameFormField className={classes.form} userModel={userModel} submitCallBack={callbacks} basicUserList={props.basicUserList} disabled={disabled}/>
+                <OverwatchNamesFormField className={classes.form} userModel={userModel} submitCallBack={callbacks} basicUserList={props.basicUserList} disabled={disabled}/>
+                <RolesFormField className={classes.form} userModel={userModel} submitCallBack={callbacks} basicUserList={props.basicUserList} disabled={disabled}/>
                 <Grid container spacing={1} justify="center">
                     <Grid item xs={3} className={classes.form}>
                         <Button variant="contained" color="secondary" fullWidth onClick={handleClickOpen}>
@@ -77,7 +127,7 @@ function ManagePlayersTab(props: any) {
                         </Button>
                     </Grid>
                     <Grid item xs={6} className={classes.form}>
-                        <Button variant="contained" color="primary" fullWidth>
+                        <Button variant="contained" color="primary" onClick={handleSubmit} fullWidth>
                             Submit
                         </Button>
                     </Grid>
@@ -91,14 +141,14 @@ function ManagePlayersTab(props: any) {
                     <DialogTitle id="alert-dialog-title">{"Confirm deleting player?"}</DialogTitle>
                     <DialogContent>
                         <DialogContentText id="alert-dialog-description">
-                            Are you sure you want to delete "TheLegend27"?
+                            Are you sure you want to delete "{userModel.username}"?
                         </DialogContentText>
                     </DialogContent>
                     <DialogActions>
                         <Button onClick={handleClose} color="secondary" autoFocus>
                             Disagree
                         </Button>
-                        <Button onClick={handleClose} color="primary">
+                        <Button onClick={handleDelete} color="primary">
                             Confirm
                         </Button>
                     </DialogActions>

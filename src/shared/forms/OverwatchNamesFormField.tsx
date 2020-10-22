@@ -5,21 +5,16 @@ import Chip from "@material-ui/core/Chip";
 import TextField from "@material-ui/core/TextField";
 import React, {useEffect} from "react";
 import {OverwatchNamesHelperText1, OverwatchNamesHelperText2} from "./FormData"
-import {PostNewUserRequest} from "../../../../rest/PostNewUser";
 
-interface OverwatchNamesFormFieldProps {
-    className?: string;
-    enableSecondHelperText?: boolean;
-    setAddPlayerRequest: PostNewUserRequest;
-    submitCallBack: any;
-}
-
-function OverwatchNamesFormField(props: OverwatchNamesFormFieldProps) {
+function OverwatchNamesFormField(props: any) {
     const [values, setValues] = React.useState(new Array<string>());
 
-    useEffect(()=>{
+    useEffect(() => {
         props.submitCallBack.owNamesCallBack = reset;
-    });
+        if (props.userModel.owNames !== undefined) {
+            setValues(props.userModel.owNames);
+        }
+    }, [props.submitCallBack.owNamesCallBack, props.userModel.owNames]);
     const reset = () => {
         setValues(new Array<string>());
     };
@@ -46,7 +41,7 @@ function OverwatchNamesFormField(props: OverwatchNamesFormFieldProps) {
                             }
                         });
                         setValues(newVals);
-                        props.setAddPlayerRequest.overwatchNames = newVals;
+                        props.userModel.owNames = newVals;
                     }}
                     renderTags={(value: string[], getTagProps) =>
                         value.map((option: string, index: number) => (
@@ -61,6 +56,8 @@ function OverwatchNamesFormField(props: OverwatchNamesFormFieldProps) {
                                        </div> : OverwatchNamesHelperText1}
                         />
                     )}
+                    autoSelect
+                    disabled={props.disabled === undefined ? false : props.disabled}
                 />
             </Grid>
         </Grid>

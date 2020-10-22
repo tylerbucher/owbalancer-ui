@@ -1,17 +1,17 @@
 import axios from "axios";
-import {errorSnackBar} from "../../../utilities/AxiosSnackBar/AxiosSnackBar";
-import BasicPlayer from "../../../models/BasicPlayer";
+import {errorSnackBar} from "../../utilities/AxiosSnackBar/AxiosSnackBar";
+import {BasicUserModel} from "./models/BasicUserModel";
 
 
-function refreshPlayers(notify: boolean, callback: any, props: any) {
-    let userList = new Array<BasicPlayer>();
+function getBasicUserList(notify: boolean, callback: any, props: any) {
+    let userList = new Array<BasicUserModel>();
     axios.get("/api/v1/users/-1", {
         responseType: "json",
     }).then(function (response) {
         if (response.status === 200) {
             response.data["api"]["users"].forEach(function (value: Object) {
                 // @ts-ignore
-                userList.push(new BasicPlayer(value["id"], value["discordName"], value["owNames"]))
+                userList.push(new BasicUserModel(value["id"], value["discordName"], value["owNames"]))
             });
             if (notify) {
                 props.enqueueSnackbar("Users Updated", {
@@ -23,9 +23,9 @@ function refreshPlayers(notify: boolean, callback: any, props: any) {
             }
             callback(userList);
         }
-    }).catch(function (reason){
+    }).catch(function (reason) {
         errorSnackBar(reason, props);
     });
 }
 
-export default refreshPlayers;
+export default getBasicUserList;

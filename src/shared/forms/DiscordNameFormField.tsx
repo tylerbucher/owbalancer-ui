@@ -3,7 +3,6 @@ import Typography from "@material-ui/core/Typography";
 import TextField from "@material-ui/core/TextField";
 import React, {useEffect} from "react";
 import {DiscordNameHelperText} from "./FormData";
-import refreshPlayers from "../../../../components/ActionMenu/actions/RefreshPlayers";
 
 function GetPossibleNames(userList: any, value: string): Array<string> {
     let nameArray = new Array<string>();
@@ -25,7 +24,7 @@ function DiscordNameFormField(props: any) {
     const [value, setValue] = React.useState("");
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setValue(event.target.value);
-        props.setAddPlayerRequest.username = event.target.value;
+        props.userModel.username = event.target.value;
 
         let nameArray = GetPossibleNames(props.basicUserList, event.target.value)
         if (nameArray.length !== 0 && event.target.value.length > 0) {
@@ -51,7 +50,8 @@ function DiscordNameFormField(props: any) {
 
     useEffect(()=>{
         props.submitCallBack.discordNameCallBack = reset;
-    });
+        setValue(props.userModel.username);
+    }, [props.submitCallBack.discordNameCallBack, props.userModel.username]);
     const reset = () => {
         setValue("");
         setError(false);
@@ -65,7 +65,7 @@ function DiscordNameFormField(props: any) {
                     Discord Username
                 </Typography>
                 <TextField
-                    autoFocus
+                    autoFocus={props.autoFocus === undefined ? false : props.autoFocus}
                     fullWidth
                     id="name"
                     label="Discord Name"
@@ -77,6 +77,7 @@ function DiscordNameFormField(props: any) {
                     onBlur={handleFocusLost}
                     onFocus={handleFocus}
                     error={error}
+                    disabled={props.disabled === undefined ? false : props.disabled}
                 />
             </Grid>
         </Grid>

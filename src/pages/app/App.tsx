@@ -4,17 +4,17 @@ import CssBaseline from "@material-ui/core/CssBaseline";
 import {createMuiTheme, createStyles, makeStyles, Theme, ThemeProvider} from "@material-ui/core/styles";
 import ActionMenu from "../../components/ActionMenu/ActionMenu";
 import Cookies from 'universal-cookie';
-import {SnackbarProvider, withSnackbar} from "notistack";
+import {withSnackbar} from "notistack";
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 import TabPanel from "../../components/TabPanel/TabPanel";
-import AddPlayerTab from "./tabs/AddPlayerTab";
-import ManagePlayersTab from "./tabs/ManagePlayersTab";
-import BalancerTab from "./tabs/BalancerTab";
 import blue from '@material-ui/core/colors/blue';
 import red from '@material-ui/core/colors/red';
-import BasicPlayer from "../../models/BasicPlayer";
-import refreshPlayers from "../../components/ActionMenu/actions/RefreshPlayers";
+import getBasicUserList from "../../shared/rest/GetBasicUserList";
+import BalancerTab from "./tabs/BalancerTab";
+import AddPlayerTab from "./tabs/AddPlayerTab";
+import ManagePlayersTab from "./tabs/ManagePlayersTab";
+import {BasicUserModel, BasicUserModelApi} from "../../shared/rest/models/BasicUserModel";
 
 
 const useStyles = makeStyles((theme: Theme) =>
@@ -54,12 +54,12 @@ function App(props: any) {
     const [darkMode, setDarkMode] = React.useState(prefersDarkMode(systemPreference));
     const [value, setValue] = React.useState(0);
 
-    const [userList, setUserList] = React.useState(new Array<BasicPlayer>());
-    useEffect(()=>{
-        if(userList.length === 0) {
-            refreshPlayers(false, setUserList, props);
+    const [userList, setUserList] = React.useState(new Array<BasicUserModelApi>());
+    useEffect(() => {
+        if (userList.length === 0) {
+            getBasicUserList(false, setUserList, props);
         }
-    });
+    }, [userList.length, props]);
 
     const handleChange = (event: React.ChangeEvent<{}>, newValue: number) => {
         setValue(newValue);
@@ -70,7 +70,7 @@ function App(props: any) {
     };
 
     const userUpdate = () => {
-        refreshPlayers(true, setUserList, props)
+        getBasicUserList(true, setUserList, props)
     };
 
     const theme = React.useMemo(
@@ -99,33 +99,33 @@ function App(props: any) {
         [darkMode],
     );
     return (
-            <ThemeProvider theme={theme}>
-                <CssBaseline/>
-                <div id={"App"} className={classes.mainContent}>
-                    <ActionMenu parentStateChange={handleDarkMode} onUserListUpdate={userUpdate}/>
-                    <Tabs
-                        value={value}
-                        onChange={handleChange}
-                        indicatorColor="primary"
-                        textColor="primary"
-                        centered
-                    >
-                        <Tab label="Balancer"/>
-                        <Tab label="Add Player"/>
-                        <Tab label="Manage Players"/>
-                        <Tab label="Settings" disabled/>
-                    </Tabs>
-                    <TabPanel value={value} index={0} variant={"center"}>
-                        <BalancerTab basicUserList={userList}/>
-                    </TabPanel>
-                    <TabPanel value={value} index={1} variant={"center"}>
-                        <AddPlayerTab basicUserList={userList}/>
-                    </TabPanel>
-                    <TabPanel value={value} index={2} variant={"center"} >
-                        <ManagePlayersTab/>
-                    </TabPanel>
-                </div>
-            </ThemeProvider>
+        <ThemeProvider theme={theme}>
+            <CssBaseline/>
+            <div id={"App"} className={classes.mainContent}>
+                <ActionMenu parentStateChange={handleDarkMode} onUserListUpdate={userUpdate}/>
+                <Tabs
+                    value={value}
+                    onChange={handleChange}
+                    indicatorColor="primary"
+                    textColor="primary"
+                    centered
+                >
+                    <Tab label="Balancer"/>
+                    <Tab label="Add Player"/>
+                    <Tab label="Manage Players"/>
+                    <Tab label="Settings" disabled/>
+                </Tabs>
+                <TabPanel value={value} index={0} variant={"center"}>
+                    <BalancerTab basicUserList={userList}/>
+                </TabPanel>
+                <TabPanel value={value} index={1} variant={"center"}>
+                    <AddPlayerTab basicUserList={userList} onUserListUpdate={userUpdate}/>
+                </TabPanel>
+                <TabPanel value={value} index={2} variant={"center"}>
+                    <ManagePlayersTab basicUserList={userList} onUserListUpdate={userUpdate}/>
+                </TabPanel>
+            </div>
+        </ThemeProvider>
     );
 }
 

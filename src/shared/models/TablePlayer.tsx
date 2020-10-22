@@ -1,7 +1,7 @@
 import StatPlayer from "./StatPlayer";
 import React from "react";
 import Tooltip from '@material-ui/core/Tooltip';
-import {NonRolePriority, PrimaryRolePriority, SecondaryRolePriority} from "../pages/App/tabs/shared/FormData";
+import {NonRolePriority, PrimaryRolePriority, SecondaryRolePriority} from "../forms/FormData";
 
 class TablePlayer {
     public readonly team: number;

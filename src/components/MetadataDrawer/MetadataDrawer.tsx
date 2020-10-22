@@ -13,7 +13,7 @@ import MailIcon from '@material-ui/icons/Mail';
 import Grid from "@material-ui/core/Grid";
 import MainBalancerTable from "../MainBalanceTable/MainBalanceTable";
 import MetadataTable, {MetadataTableRow} from "../MetadataTable/MetadataTable";
-import MetadataResponse from "../../models/MetadataResponse";
+import MetadataResponse from "../../shared/models/MetadataResponse";
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({

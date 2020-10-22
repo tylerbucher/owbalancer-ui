@@ -1,24 +1,15 @@
 import React from "react";
 import Button from '@material-ui/core/Button';
-import TextField from '@material-ui/core/TextField';
-import Chip from '@material-ui/core/Chip';
-import Autocomplete from '@material-ui/lab/Autocomplete';
 import {createStyles, makeStyles, Theme} from '@material-ui/core/styles';
 import Container from "@material-ui/core/Container";
 import Grid from '@material-ui/core/Grid';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
-import FormLabel from '@material-ui/core/FormLabel';
-import Radio from '@material-ui/core/Radio';
-import RadioGroup from '@material-ui/core/RadioGroup';
 import Typography from "@material-ui/core/Typography";
-import Tooltip from '@material-ui/core/Tooltip';
-import InfoOutlinedIcon from '@material-ui/icons/InfoOutlined';
-import {PrimaryRolePriority, SecondaryRolePriority, NonRolePriority, roleToolTip} from "./shared/FormData";
-import RolesFormField from "./shared/RolesFormField";
-import DiscordNameFormField from "./shared/DiscordNameFormField";
-import OverwatchNamesFormField from "./shared/OverwatchNamesFormField";
-import postNewUser, {PostNewUserRequest} from "../../../rest/PostNewUser";
+import RolesFormField from "../../../shared/forms/RolesFormField";
+import DiscordNameFormField from "../../../shared/forms/DiscordNameFormField";
+import OverwatchNamesFormField from "../../../shared/forms/OverwatchNamesFormField";
 import {withSnackbar} from "notistack";
+import {PostNewUserModel, PostNewUserModelApi} from "../../../shared/rest/models/PostNewUserModel";
+import postNewUser from "../../../shared/rest/PostNewUser";
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -44,20 +35,24 @@ class CallBacks {
 
 function AddPlayerTab(props: any) {
     const classes = useStyles();
-    const [addPlayerRequest, setAddPlayerRequest] = React.useState<PostNewUserRequest>(new PostNewUserRequest());
-    const [callbacks, setCallbacks] = React.useState(new CallBacks());
+    const [addPlayerRequest] = React.useState<PostNewUserModelApi>(new PostNewUserModel());
+    const [callbacks] = React.useState(new CallBacks());
 
     const handleSubmit = () => {
-        postNewUser(addPlayerRequest, props);
-        if(callbacks.discordNameCallBack !== undefined) {
+        postNewUser(addPlayerRequest, props, reset);
+    };
+
+    const reset = () => {
+        if (callbacks.discordNameCallBack !== undefined) {
             callbacks.discordNameCallBack();
         }
-        if(callbacks.owNamesCallBack !== undefined) {
+        if (callbacks.owNamesCallBack !== undefined) {
             callbacks.owNamesCallBack();
         }
-        if(callbacks.rolesCallBack !== undefined) {
+        if (callbacks.rolesCallBack !== undefined) {
             callbacks.rolesCallBack();
         }
+        props.onUserListUpdate();
     };
 
     return (
@@ -70,9 +65,12 @@ function AddPlayerTab(props: any) {
                         </Typography>
                     </Grid>
                 </Grid>
-                <DiscordNameFormField className={classes.form} basicUserList={props.basicUserList} setAddPlayerRequest={addPlayerRequest} submitCallBack={callbacks}/>
-                <OverwatchNamesFormField className={classes.form} setAddPlayerRequest={addPlayerRequest} submitCallBack={callbacks} enableSecondHelperText/>
-                <RolesFormField className={classes.form} setAddPlayerRequest={addPlayerRequest} submitCallBack={callbacks}/>
+                <DiscordNameFormField className={classes.form} basicUserList={props.basicUserList}
+                                      userModel={addPlayerRequest} submitCallBack={callbacks} autoFocus/>
+                <OverwatchNamesFormField className={classes.form} userModel={addPlayerRequest}
+                                         submitCallBack={callbacks} enableSecondHelperText/>
+                <RolesFormField className={classes.form} userModel={addPlayerRequest}
+                                submitCallBack={callbacks}/>
                 <Grid container spacing={1} justify="center">
                     <Grid item xs={9} className={classes.form}>
                         <Button variant="contained" color="primary" fullWidth onClick={handleSubmit}>

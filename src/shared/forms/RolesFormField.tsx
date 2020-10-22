@@ -8,7 +8,9 @@ import {
     NonRolePriority,
     PrimaryRolePriority,
     roleToolTip,
-    SecondaryRolePriority, SupportRoleDefault, TankRoleDefault
+    SecondaryRolePriority,
+    SupportRoleDefault,
+    TankRoleDefault
 } from "./FormData";
 import InfoOutlinedIcon from "@material-ui/icons/InfoOutlined";
 import RadioGroup from "@material-ui/core/RadioGroup";
@@ -44,36 +46,53 @@ function RolesFormField(props: any) {
     const handleTankSrChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         let val = parseInt(event.target.value);
         setTankSr(Number.isNaN(val) ? -1 : val);
-        props.setAddPlayerRequest.tankSr = Number.isNaN(val) ? -1 : val;
+        props.userModel.tankSr = Number.isNaN(val) ? -1 : val;
     };
     const handleTankChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setTankOption(Number.parseInt((event.target as HTMLInputElement).value));
-        props.setAddPlayerRequest.tankPreference = Number.parseInt((event.target as HTMLInputElement).value);
+        props.userModel.tankPreference = Number.parseInt((event.target as HTMLInputElement).value);
     };
 
     const handleDpsSrChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         let val = parseInt(event.target.value);
         setDpsSr(Number.isNaN(val) ? -1 : val);
-        props.setAddPlayerRequest.dpsSr = Number.isNaN(val) ? -1 : val;
+        props.userModel.dpsSr = Number.isNaN(val) ? -1 : val;
     };
     const handleDpsChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setDpsOption(Number.parseInt((event.target as HTMLInputElement).value));
-        props.setAddPlayerRequest.dpsPreference = Number.parseInt((event.target as HTMLInputElement).value);
+        props.userModel.dpsPreference = Number.parseInt((event.target as HTMLInputElement).value);
     };
 
     const handleSupportSrChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         let val = parseInt(event.target.value);
         setSupportSr(Number.isNaN(val) ? -1 : val);
-        props.setAddPlayerRequest.supportSr = Number.isNaN(val) ? -1 : val;
+        props.userModel.supportSr = Number.isNaN(val) ? -1 : val;
     };
     const handleSupportChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setSupportOption(Number.parseInt((event.target as HTMLInputElement).value));
-        props.setAddPlayerRequest.supportPreference = Number.parseInt((event.target as HTMLInputElement).value);
+        props.userModel.supportPreference = Number.parseInt((event.target as HTMLInputElement).value);
     };
 
-    useEffect(()=>{
+    useEffect(() => {
         props.submitCallBack.rolesCallBack = reset;
-    });
+
+        if(props.userModel.tankSr !== undefined) setTankSr(props.userModel.tankSr);
+        if(props.userModel.tankPreference !== undefined) setTankOption(props.userModel.tankPreference);
+
+        if(props.userModel.dpsSr !== undefined) setDpsSr(props.userModel.dpsSr);
+        if(props.userModel.dpsPreference !== undefined) setDpsOption(props.userModel.dpsPreference);
+
+        if(props.userModel.supportSr !== undefined) setSupportSr(props.userModel.supportSr);
+        if(props.userModel.supportPreference !== undefined) setSupportOption(props.userModel.supportPreference);
+    }, [
+        props.submitCallBack.rolesCallBack,
+        props.userModel.tankSr,
+        props.userModel.tankPreference,
+        props.userModel.dpsSr,
+        props.userModel.dpsPreference,
+        props.userModel.supportSr,
+        props.userModel.supportPreference
+    ]);
     const reset = () => {
         setTankSr(-1);
         setDpsSr(-1);
@@ -98,6 +117,7 @@ function RolesFormField(props: any) {
                     fullWidth
                     value={tankSr === -1 ? "" : tankSr}
                     onChange={handleTankSrChange}
+                    disabled={props.disabled === undefined ? false : props.disabled}
                 />
                 <FormLabel component="legend" className={classes.iconAlign}>
                     Role Priority
@@ -106,9 +126,12 @@ function RolesFormField(props: any) {
                     </Tooltip>
                 </FormLabel>
                 <RadioGroup aria-label="gender" name="gender1" value={tankOption} onChange={handleTankChange}>
-                    <FormControlLabel value={PrimaryRolePriority.value} control={<Radio/>} label={PrimaryRolePriority.fullName}/>
-                    <FormControlLabel value={SecondaryRolePriority.value} control={<Radio/>} label={SecondaryRolePriority.fullName}/>
-                    <FormControlLabel value={NonRolePriority.value} control={<Radio/>} label={NonRolePriority.fullName}/>
+                    <FormControlLabel value={PrimaryRolePriority.value} control={<Radio/>}
+                                      label={PrimaryRolePriority.fullName} disabled={props.disabled === undefined ? false : props.disabled}/>
+                    <FormControlLabel value={SecondaryRolePriority.value} control={<Radio/>}
+                                      label={SecondaryRolePriority.fullName} disabled={props.disabled === undefined ? false : props.disabled}/>
+                    <FormControlLabel value={NonRolePriority.value} control={<Radio/>}
+                                      label={NonRolePriority.fullName} disabled={props.disabled === undefined ? false : props.disabled}/>
                 </RadioGroup>
             </Grid>
             <Grid item xs={3} className={props.className}>
@@ -123,12 +146,16 @@ function RolesFormField(props: any) {
                     fullWidth
                     value={dpsSr === -1 ? "" : dpsSr}
                     onChange={handleDpsSrChange}
+                    disabled={props.disabled === undefined ? false : props.disabled}
                 />
                 <FormLabel component="legend">Role Priority</FormLabel>
                 <RadioGroup aria-label="gender" name="gender1" value={dpsOption} onChange={handleDpsChange}>
-                    <FormControlLabel value={PrimaryRolePriority.value} control={<Radio/>} label={PrimaryRolePriority.fullName}/>
-                    <FormControlLabel value={SecondaryRolePriority.value} control={<Radio/>} label={SecondaryRolePriority.fullName}/>
-                    <FormControlLabel value={NonRolePriority.value} control={<Radio/>} label={NonRolePriority.fullName}/>
+                    <FormControlLabel value={PrimaryRolePriority.value} control={<Radio/>}
+                                      label={PrimaryRolePriority.fullName} disabled={props.disabled === undefined ? false : props.disabled}/>
+                    <FormControlLabel value={SecondaryRolePriority.value} control={<Radio/>}
+                                      label={SecondaryRolePriority.fullName} disabled={props.disabled === undefined ? false : props.disabled}/>
+                    <FormControlLabel value={NonRolePriority.value} control={<Radio/>}
+                                      label={NonRolePriority.fullName} disabled={props.disabled === undefined ? false : props.disabled}/>
                 </RadioGroup>
             </Grid>
             <Grid item xs={3} className={props.className}>
@@ -143,12 +170,16 @@ function RolesFormField(props: any) {
                     fullWidth
                     value={supportSr === -1 ? "" : supportSr}
                     onChange={handleSupportSrChange}
+                    disabled={props.disabled === undefined ? false : props.disabled}
                 />
                 <FormLabel component="legend">Role Priority</FormLabel>
                 <RadioGroup aria-label="gender" name="gender1" value={supportOption} onChange={handleSupportChange}>
-                    <FormControlLabel value={PrimaryRolePriority.value} control={<Radio/>} label={PrimaryRolePriority.fullName}/>
-                    <FormControlLabel value={SecondaryRolePriority.value} control={<Radio/>} label={SecondaryRolePriority.fullName}/>
-                    <FormControlLabel value={NonRolePriority.value} control={<Radio/>} label={NonRolePriority.fullName}/>
+                    <FormControlLabel value={PrimaryRolePriority.value} control={<Radio/>}
+                                      label={PrimaryRolePriority.fullName} disabled={props.disabled === undefined ? false : props.disabled}/>
+                    <FormControlLabel value={SecondaryRolePriority.value} control={<Radio/>}
+                                      label={SecondaryRolePriority.fullName} disabled={props.disabled === undefined ? false : props.disabled}/>
+                    <FormControlLabel value={NonRolePriority.value} control={<Radio/>}
+                                      label={NonRolePriority.fullName} disabled={props.disabled === undefined ? false : props.disabled}/>
                 </RadioGroup>
             </Grid>
         </Grid>

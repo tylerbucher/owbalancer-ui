@@ -13,7 +13,7 @@ import PublishIcon from "@material-ui/icons/Publish";
 import Brightness2Icon from "@material-ui/icons/Brightness2";
 import { useSnackbar, withSnackbar } from 'notistack';
 import changeDarkMode from "./actions/ChangeDarkMode";
-import refreshPlayers from "./actions/RefreshPlayers";
+import getBasicUserList from "../../shared/rest/GetBasicUserList";
 
 const useStyles = makeStyles((theme: Theme) =>
 

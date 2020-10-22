@@ -6,27 +6,19 @@ import React from "react";
 import Grid from "@material-ui/core/Grid";
 import Button from "@material-ui/core/Button";
 import {createStyles, makeStyles, Theme} from "@material-ui/core/styles";
-import CustomTable from "../../../components/CustomTable/CustomTable";
-import {StyledTableRow} from "../../../components/CustomTable/CustomTable";
-import {StyledTableCell} from "../../../components/CustomTable/CustomTable";
-import TableCell from '@material-ui/core/TableCell';
-import TableRow from '@material-ui/core/TableRow';
 import MainBalancerTable, {
     createData,
     emptyRows,
     insertBlankRow
 } from "../../../components/MainBalanceTable/MainBalanceTable";
 import MetadataDrawer from "../../../components/MetadataDrawer/MetadataDrawer";
-import VerifiedUserIcon from '@material-ui/icons/VerifiedUser';
-import DoneIcon from '@material-ui/icons/Done';
-import ClearIcon from '@material-ui/icons/Clear';
-import BasicPlayer from "../../../models/BasicPlayer";
-import TagPlayer, {tagPlayerEqual} from "../../../models/TagPlayer";
-import balance from "../../../rest/PostBalance";
+import balance from "../../../shared/rest/PostBalance";
 import {withSnackbar} from "notistack";
-import BalanceResponse from "../../../models/BalanceResponse";
-import {MetadataTableRow, createData as createMetaData} from "../../../components/MetadataTable/MetadataTable";
+import {createData as createMetaData, MetadataTableRow} from "../../../components/MetadataTable/MetadataTable";
 import Pagination from '@material-ui/lab/Pagination';
+import {BasicTagPlayerModel, BasicTagPlayerModelApi} from "../../../shared/models/BasicTagPlayerModel";
+import {BasicUserModelApi} from "../../../shared/rest/models/BasicUserModel";
+import {BalanceResponseModel} from "../../../shared/rest/models/BalanceResponseModel";
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -73,29 +65,29 @@ interface BalanceTableRow {
     support?: JSX.Element;
 }
 
-function invertedUserList(userList: Array<BasicPlayer>): Array<TagPlayer> {
-    let iUserList = new Array<TagPlayer>();
-    userList.forEach((user)=>{
-        iUserList.push(new TagPlayer(user.id, user.discordName, user.discordName));
-        user.overwatchNames.forEach((name)=>{
-            if(name.toUpperCase() !== user.discordName.toUpperCase()) {
-                iUserList.push(new TagPlayer(user.id, name, user.discordName));
+export function invertedUserList(userList: Array<BasicUserModelApi>): Array<BasicTagPlayerModelApi> {
+    let iUserList = new Array<BasicTagPlayerModelApi>();
+    userList.forEach((user) => {
+        iUserList.push(new BasicTagPlayerModel(user.id, user.discordName, user.discordName));
+        user.overwatchNames.forEach((name) => {
+            if (name.toUpperCase() !== user.discordName.toUpperCase()) {
+                iUserList.push(new BasicTagPlayerModel(user.id, name, user.discordName));
             }
         });
     });
-    iUserList.sort((a, b)=>{
+    iUserList.sort((a, b) => {
         return a.discordName.localeCompare(b.discordName);
     });
     return iUserList;
 }
 
-function createMainTableRows(balanceResponse: BalanceResponse, users: Array<TagPlayer>,tableId: number, currentPage: number): Array<BalanceTableRow> {
+function createMainTableRows(balanceResponse: BalanceResponseModel, users: Array<BasicTagPlayerModelApi>, tableId: number, currentPage: number): Array<BalanceTableRow> {
     let tblRows = new Array<BalanceTableRow>();
-    balanceResponse.balanceList[currentPage].sort((a, b)=>{
+    balanceResponse.balanceList[currentPage].sort((a, b) => {
         return a.position - b.position;
     });
-    balanceResponse.balanceList[currentPage].forEach((player, index) =>{
-        if(player.team === tableId) {
+    balanceResponse.balanceList[currentPage].forEach((player, index) => {
+        if (player.team === tableId) {
             let user = users.find(tag => tag.id === player.user.id)
             tblRows.push(
                 createData(
@@ -116,7 +108,7 @@ function createMainTableRows(balanceResponse: BalanceResponse, users: Array<TagP
     return tblRows;
 }
 
-function createMetaTableRows(balanceResponse: BalanceResponse, tableId: number, currentPage: number): Array<MetadataTableRow> {
+function createMetaTableRows(balanceResponse: BalanceResponseModel, tableId: number, currentPage: number): Array<MetadataTableRow> {
     let tblRows = new Array<MetadataTableRow>();
     let metaResponse = balanceResponse.metadataList[currentPage];
 
@@ -134,7 +126,7 @@ function createMetaTableRows(balanceResponse: BalanceResponse, tableId: number, 
     tblRows.push(createMetaData("└─ Total SR", (tableId === 1 ? metaResponse.team1TotalSr : metaResponse.team2TotalSr).toString()));
     tblRows.push(createMetaData("Average SR (All roles)", (tableId === 1 ? metaResponse.team1TotalAverageSr : metaResponse.team2TotalAverageSr).toString() + ` (Δ ${currTeamTotal - otherTeamTotal})`));
     tblRows.push(createMetaData("└─ Total SR (All roles)", (tableId === 1 ? metaResponse.team1TotalSrDistribution : metaResponse.team2TotalSrDistribution).toString()));
-    tblRows.push(createMetaData("Adaptability (How well the team can adapt to playing different roles)", (tableId === 1 ? metaResponse.team1Adaptability : metaResponse.team2Adaptability).toString()+"%"));
+    tblRows.push(createMetaData("Adaptability (How well the team can adapt to playing different roles)", (tableId === 1 ? metaResponse.team1Adaptability : metaResponse.team2Adaptability).toString() + "%"));
     tblRows.push(createMetaData("├─ Tank Adaptability", (tableId === 1 ? metaResponse.team1TankAdaptability : metaResponse.team2TankAdaptability).toString() + "%"));
     tblRows.push(createMetaData("├─ DPS Adaptability", (tableId === 1 ? metaResponse.team1DpsAdaptability : metaResponse.team2DpsAdaptability).toString() + "%"));
     tblRows.push(createMetaData("└─ Support Adaptability", (tableId === 1 ? metaResponse.team1SupportAdaptability : metaResponse.team2SupportAdaptability).toString() + "%"));
@@ -151,17 +143,17 @@ function BalancerTab(props: any) {
     };
 
     const [numUsers, setNumUsers] = React.useState(0);
-    const [users, setUsers] = React.useState(new Array<TagPlayer>());
+    const [users, setUsers] = React.useState(new Array<BasicTagPlayerModelApi>());
     const [currentPage, setCurrentPage] = React.useState(1);
     const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
-        if(balanceResponse !== undefined) {
+        if (balanceResponse !== undefined) {
             setCurrentPage(value);
 
-            setCurrentTable1Rows(createMainTableRows(balanceResponse, users, 1, currentPage-1));
-            setCurrentTable2Rows(createMainTableRows(balanceResponse, users, 2, currentPage-1));
+            setCurrentTable1Rows(createMainTableRows(balanceResponse, users, 1, currentPage - 1));
+            setCurrentTable2Rows(createMainTableRows(balanceResponse, users, 2, currentPage - 1));
 
-            setCurrentMeta1Rows(createMetaTableRows(balanceResponse, 1, currentPage-1));
-            setCurrentMeta2Rows(createMetaTableRows(balanceResponse, 2, currentPage-1));
+            setCurrentMeta1Rows(createMetaTableRows(balanceResponse, 1, currentPage - 1));
+            setCurrentMeta2Rows(createMetaTableRows(balanceResponse, 2, currentPage - 1));
         }
     };
 
@@ -171,16 +163,16 @@ function BalancerTab(props: any) {
     const [currentMeta1Rows, setCurrentMeta1Rows] = React.useState<Array<MetadataTableRow>>(new Array<MetadataTableRow>());
     const [currentMeta2Rows, setCurrentMeta2Rows] = React.useState<Array<MetadataTableRow>>(new Array<MetadataTableRow>());
 
-    const [balanceResponse, setBalanceResponse] = React.useState<BalanceResponse>();
-    const setResponse = (balanceResponse: BalanceResponse) => {
+    const [balanceResponse, setBalanceResponse] = React.useState<BalanceResponseModel>();
+    const setResponse = (balanceResponse: BalanceResponseModel) => {
         setBalanceResponse(balanceResponse);
         setCurrentPage(1);
 
-        setCurrentTable1Rows(createMainTableRows(balanceResponse, users, 1, currentPage-1));
-        setCurrentTable2Rows(createMainTableRows(balanceResponse, users, 2, currentPage-1));
+        setCurrentTable1Rows(createMainTableRows(balanceResponse, users, 1, currentPage - 1));
+        setCurrentTable2Rows(createMainTableRows(balanceResponse, users, 2, currentPage - 1));
 
-        setCurrentMeta1Rows(createMetaTableRows(balanceResponse, 1, currentPage-1));
-        setCurrentMeta2Rows(createMetaTableRows(balanceResponse, 2, currentPage-1));
+        setCurrentMeta1Rows(createMetaTableRows(balanceResponse, 1, currentPage - 1));
+        setCurrentMeta2Rows(createMetaTableRows(balanceResponse, 2, currentPage - 1));
     };
 
     return (
@@ -192,10 +184,12 @@ function BalancerTab(props: any) {
                             multiple
                             id="tags-outlined"
                             options={invertedUserList(props.basicUserList)}
-                            getOptionLabel={(option: TagPlayer) => option.overwatchName}
-                            groupBy={(option: TagPlayer) => option.discordName}
+                            getOptionLabel={(option: BasicTagPlayerModelApi) => option.overwatchName}
+                            groupBy={(option: BasicTagPlayerModelApi) => option.discordName}
                             value={users}
-                            getOptionSelected={((option, value) => {return tagPlayerEqual(option, value)})}
+                            getOptionSelected={((option, value) => {
+                                return BasicTagPlayerModel.equals(option, value)
+                            })}
                             filterSelectedOptions={true}
                             renderInput={(params) => (
                                 <TextField
@@ -205,26 +199,29 @@ function BalancerTab(props: any) {
                                     placeholder="Selected Users"
                                 />
                             )}
-                            onChange={(event, value)=>{
+                            onChange={(event, value) => {
                                 setNumUsers(value.length);
                                 setUsers(value);
                             }}
+                            openOnFocus
                         />
                     </Grid>
                 </Grid>
                 <Grid container spacing={1} justify="center">
                     <Grid item xs={12}>
-                        <Button variant="contained" color="primary" fullWidth onClick={()=>{balance(users, props, setResponse)}}>
+                        <Button variant="contained" color="primary" fullWidth onClick={() => {
+                            balance(users, props, setResponse)
+                        }}>
                             Balance
                         </Button>
                     </Grid>
                 </Grid>
                 <Grid container spacing={1} justify="center">
                     <Grid item xs={6}>
-                        <MainBalancerTable rows={currentTable1Rows} />
+                        <MainBalancerTable rows={currentTable1Rows}/>
                     </Grid>
                     <Grid item xs={6}>
-                        <MainBalancerTable rows={currentTable2Rows} />
+                        <MainBalancerTable rows={currentTable2Rows}/>
                     </Grid>
                 </Grid>
                 <Grid container spacing={1} justify="space-between" direction="row">
@@ -238,7 +235,8 @@ function BalancerTab(props: any) {
                     </Grid>
                 </Grid>
             </Paper>
-            <MetadataDrawer open={open} handleClose={toggleDrawer(false)} table1Rows={currentMeta1Rows} table2Rows={currentMeta2Rows}/>
+            <MetadataDrawer open={open} handleClose={toggleDrawer(false)} table1Rows={currentMeta1Rows}
+                            table2Rows={currentMeta2Rows}/>
         </Container>
     );
 }
