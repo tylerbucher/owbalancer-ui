@@ -5,11 +5,17 @@ import App from './pages/app/App';
 import * as serviceWorker from './serviceWorker';
 import 'fontsource-roboto';
 import {SnackbarProvider} from "notistack";
+import {
+    BrowserRouter as Router,
+    Switch,
+    Route,
+    Link
+} from "react-router-dom";
 
 ReactDOM.render(
     <React.StrictMode>
         <SnackbarProvider maxSnack={3} preventDuplicate>
-            <App />
+            <App/>
         </SnackbarProvider>
     </React.StrictMode>,
     document.getElementById('root')

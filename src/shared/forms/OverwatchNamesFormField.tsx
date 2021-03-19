@@ -11,10 +11,10 @@ function OverwatchNamesFormField(props: any) {
 
     useEffect(() => {
         props.submitCallBack.owNamesCallBack = reset;
-        if (props.userModel.owNames !== undefined) {
-            setValues(props.userModel.owNames);
+        if (props.userModel.names !== undefined) {
+            setValues(props.userModel.names);
         }
-    }, [props.submitCallBack.owNamesCallBack, props.userModel.owNames]);
+    }, [props.submitCallBack.owNamesCallBack, props.userModel.names]);
     const reset = () => {
         setValues(new Array<string>());
     };
@@ -41,7 +41,7 @@ function OverwatchNamesFormField(props: any) {
                             }
                         });
                         setValues(newVals);
-                        props.userModel.owNames = newVals;
+                        props.userModel.names = newVals;
                     }}
                     renderTags={(value: string[], getTagProps) =>
                         value.map((option: string, index: number) => (

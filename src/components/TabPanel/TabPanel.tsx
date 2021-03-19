@@ -8,7 +8,7 @@ const useStyles = makeStyles((theme: Theme) =>
         root: {
         },
         center: {
-            height: "100%"
+            height: "calc(100% - 48px);"
         }
     }),
 );
@@ -18,6 +18,7 @@ interface TabPanelProps {
     index: any;
     value: any;
     variant?: string;
+    className?: string;
 }
 
 function TabPanel(props: TabPanelProps) {
@@ -32,7 +33,7 @@ function TabPanel(props: TabPanelProps) {
             id={`scrollable-auto-tabpanel-${index}`}
             aria-labelledby={`scrollable-auto-tab-${index}`}
             {...other}
-            className={cClass}
+            className={`${cClass} ${props.className}`}
         >
             {value === index && (
                 <Box p={3} className={cClass}>

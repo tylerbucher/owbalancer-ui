@@ -1,14 +1,14 @@
 import {errorSnackBar} from "../../utilities/AxiosSnackBar/AxiosSnackBar";
 import axios from "axios";
-import {PostNewUserModelApi} from "./models/PostNewUserModel";
+import {PatchNewInviteModelApi} from "./models/PatchNewInviteModel";
 
-function postNewUser(postRequest: PostNewUserModelApi, props: any, callback: any) {
-    axios.post("/api/v1/users", postRequest, {
+function patchInvite(postRequest: PatchNewInviteModelApi, props: any, callback: any) {
+    axios.patch("/api/v1/invites", postRequest, {
         responseType: "json",
     }).then(function (response) {
         if (response.status === 200) {
             callback();
-            props.enqueueSnackbar("User created successfully", {
+            props.enqueueSnackbar("User invited updated successfully", {
                 anchorOrigin: {horizontal: "right", vertical: "top"},
                 variant: "success",
                 transitionDuration: {enter: 225, exit: 195},
@@ -19,9 +19,9 @@ function postNewUser(postRequest: PostNewUserModelApi, props: any, callback: any
         errorSnackBar(reason, props, [
             {error: 400, message: "Malformed request"},
             {error: 406, message: "Some submitted data is invalid"},
-            {error: 409, message: "This user already exists or account creation is disabled at this time."},
+            {error: 409, message: "Internal user invite error."},
         ]);
     });
 }
 
-export default postNewUser;
+export default patchInvite;

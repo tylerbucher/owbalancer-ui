@@ -1,9 +1,9 @@
 import {errorSnackBar} from "../../utilities/AxiosSnackBar/AxiosSnackBar";
 import axios from "axios";
-import {PostNewUserModelApi} from "./models/PostNewUserModel";
+import {PostNewPlayerModel} from "./models/PostNewPlayerModel";
 
-function postNewUser(postRequest: PostNewUserModelApi, props: any, callback: any) {
-    axios.post("/api/v1/users", postRequest, {
+function postNewPlayer(postRequest: PostNewPlayerModel, props: any, callback: any) {
+    axios.post("/api/v1/players", postRequest, {
         responseType: "json",
     }).then(function (response) {
         if (response.status === 200) {
@@ -18,10 +18,11 @@ function postNewUser(postRequest: PostNewUserModelApi, props: any, callback: any
     }).catch(function (reason) {
         errorSnackBar(reason, props, [
             {error: 400, message: "Malformed request"},
+            {error: 401, message: "You can not submit another player at this time"},
             {error: 406, message: "Some submitted data is invalid"},
-            {error: 409, message: "This user already exists or account creation is disabled at this time."},
+            {error: 409, message: "This user already exists"},
         ]);
     });
 }
 
-export default postNewUser;
+export default postNewPlayer;

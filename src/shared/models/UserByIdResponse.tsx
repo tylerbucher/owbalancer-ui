@@ -2,7 +2,7 @@ import TablePlayer from "./TablePlayer";
 import MetadataResponse from "./MetadataResponse";
 
 interface UserByIdResponseApi {
-    id: number;
+    uuid: string;
     name: string;
     tankPreference: number;
     dpsPreference: number;
@@ -16,7 +16,7 @@ interface UserByIdResponseApi {
 
 class UserByIdResponse {
 
-    public readonly id: number;
+    public readonly uuid: string;
     public readonly name: string;
     public readonly tankPreference: number;
     public readonly dpsPreference: number;
@@ -31,7 +31,7 @@ class UserByIdResponse {
     constructor(inputString: string) {
         let jsonObj: UserByIdResponseApi = JSON.parse(inputString);
 
-        this.id = jsonObj.id;
+        this.uuid = jsonObj.uuid;
         this.name = jsonObj.name;
         this.tankPreference = jsonObj.tankPreference;
         this.dpsPreference = jsonObj.dpsPreference;

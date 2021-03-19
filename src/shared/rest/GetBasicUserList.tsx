@@ -5,13 +5,13 @@ import {BasicUserModel} from "./models/BasicUserModel";
 
 function getBasicUserList(notify: boolean, callback: any, props: any) {
     let userList = new Array<BasicUserModel>();
-    axios.get("/api/v1/users/-1", {
+    axios.get("/api/v1/players", {
         responseType: "json",
     }).then(function (response) {
         if (response.status === 200) {
-            response.data["api"]["users"].forEach(function (value: Object) {
+            response.data["players"].forEach(function (value: Object) {
                 // @ts-ignore
-                userList.push(new BasicUserModel(value["id"], value["discordName"], value["owNames"]))
+                userList.push(new BasicUserModel(value["uuid"], value["playerName"], value["names"]))
             });
             if (notify) {
                 props.enqueueSnackbar("Users Updated", {

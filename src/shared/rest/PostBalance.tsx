@@ -4,9 +4,9 @@ import {BalanceResponseModel} from "./models/BalanceResponseModel";
 import {BasicTagPlayerModelApi} from "../models/BasicTagPlayerModel";
 
 function balance(users: Array<BasicTagPlayerModelApi>, props: any, callback: any) {
-    let userIds = new Set<number>();
+    let userIds = new Set<string>();
     users.forEach((user) => {
-        userIds.add(user.id);
+        userIds.add(user.uuid);
     });
 
     axios.post("/api/v1/balance", {
@@ -15,7 +15,7 @@ function balance(users: Array<BasicTagPlayerModelApi>, props: any, callback: any
         responseType: "json",
     }).then(function (response) {
         if (response.status === 200) {
-            let balanceResponse = new BalanceResponseModel(JSON.stringify(response.data.api));
+            let balanceResponse = new BalanceResponseModel(JSON.stringify(response.data));
             callback(balanceResponse);
         }
     }).catch(function (reason) {

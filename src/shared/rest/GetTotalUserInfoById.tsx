@@ -2,12 +2,12 @@ import {errorSnackBar} from "../../utilities/AxiosSnackBar/AxiosSnackBar";
 import axios from "axios";
 import {CompleteUserModel, CompleteUserModelApi} from "./models/CompleteUserModel";
 
-function getTotalUserInfoById(id: number, props: any, callback: any) {
-    axios.get("/api/v1/users/" + id, {
+function getTotalUserInfoById(id: string, props: any, callback: any) {
+    axios.get("/api/v1/players/" + id, {
         responseType: "json",
     }).then(function (response) {
         if (response.status === 200) {
-            let statPlayer: CompleteUserModelApi = new CompleteUserModel(JSON.stringify(response.data.api));
+            let statPlayer: CompleteUserModelApi = new CompleteUserModel(JSON.stringify(response.data.player));
             callback(statPlayer);
         }
     }).catch(function (reason) {

@@ -1,18 +1,18 @@
 export interface BasicUserModelApi {
-    id: number;
-    discordName: string;
-    overwatchNames: Array<string>;
+    uuid: string;
+    playerName: string;
+    names: Array<string>;
 }
 
 export class BasicUserModel implements BasicUserModelApi {
 
-    public readonly id: number;
-    public readonly discordName: string;
-    public readonly overwatchNames: Array<string>;
+    public readonly uuid: string;
+    public readonly playerName: string;
+    public readonly names: Array<string>;
 
-    constructor(id: number, discordName: string, overwatchNames: Array<string>) {
-        this.id = id;
-        this.discordName = discordName;
-        this.overwatchNames = overwatchNames;
+    constructor(uuid: string, playerName: string, names: Array<string>) {
+        this.uuid = uuid;
+        this.playerName = playerName;
+        this.names = names;
     }
 }

@@ -1,6 +1,6 @@
 export interface CompleteUserModelApi {
-    id: number;
-    username: string;
+    uuid: string;
+    playerName: string;
     tankPreference: number;
     dpsPreference: number;
     supportPreference: number;
@@ -8,13 +8,13 @@ export interface CompleteUserModelApi {
     dpsSr: number;
     supportSr: number;
     totalPref: number;
-    owNames: Array<string>;
+    names: Array<string>;
 }
 
 export class CompleteUserModel implements CompleteUserModelApi {
 
-    public id: number;
-    public username: string;
+    public uuid: string;
+    public playerName: string;
     public tankPreference: number;
     public dpsPreference: number;
     public supportPreference: number;
@@ -22,12 +22,12 @@ export class CompleteUserModel implements CompleteUserModelApi {
     public dpsSr: number;
     public supportSr: number;
     public totalPref: number;
-    public owNames: Array<string>;
+    public names: Array<string>;
 
     constructor(input?: string) {
         if (input === undefined) {
-            this.id = -1;
-            this.username = "";
+            this.uuid = "";
+            this.playerName = "";
             this.tankPreference = -1;
             this.dpsPreference = -1;
             this.supportPreference = -1;
@@ -35,19 +35,19 @@ export class CompleteUserModel implements CompleteUserModelApi {
             this.dpsSr = -1;
             this.supportSr = -1;
             this.totalPref = -1;
-            this.owNames = new Array<string>();
+            this.names = new Array<string>();
         } else {
             let obj = JSON.parse(input);
-            this.id = obj.userInfo.id;
-            this.username = obj.userInfo.name;
-            this.tankPreference = obj.userInfo.tankPreference;
-            this.dpsPreference = obj.userInfo.dpsPreference;
-            this.supportPreference = obj.userInfo.supportPreference;
-            this.tankSr = obj.userInfo.tankSr;
-            this.dpsSr = obj.userInfo.dpsSr;
-            this.supportSr = obj.userInfo.supportSr;
-            this.totalPref = obj.userInfo.totalPref;
-            this.owNames = obj.owNames;
+            this.uuid = obj.uuid;
+            this.playerName = obj.playerName;
+            this.tankPreference = obj.tankPreference;
+            this.dpsPreference = obj.dpsPreference;
+            this.supportPreference = obj.supportPreference;
+            this.tankSr = obj.tankSr;
+            this.dpsSr = obj.dpsSr;
+            this.supportSr = obj.supportSr;
+            this.totalPref = this.tankPreference + this.dpsPreference + this.supportPreference;
+            this.names = obj.names;
         }
     }
 }

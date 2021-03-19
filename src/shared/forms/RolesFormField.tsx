@@ -125,7 +125,7 @@ function RolesFormField(props: any) {
                         <InfoOutlinedIcon fontSize={"small"}/>
                     </Tooltip>
                 </FormLabel>
-                <RadioGroup aria-label="gender" name="gender1" value={tankOption} onChange={handleTankChange}>
+                <RadioGroup id="tankPriority" value={tankOption} onChange={handleTankChange} tabIndex={2}>
                     <FormControlLabel value={PrimaryRolePriority.value} control={<Radio/>}
                                       label={PrimaryRolePriority.fullName} disabled={props.disabled === undefined ? false : props.disabled}/>
                     <FormControlLabel value={SecondaryRolePriority.value} control={<Radio/>}
@@ -149,7 +149,7 @@ function RolesFormField(props: any) {
                     disabled={props.disabled === undefined ? false : props.disabled}
                 />
                 <FormLabel component="legend">Role Priority</FormLabel>
-                <RadioGroup aria-label="gender" name="gender1" value={dpsOption} onChange={handleDpsChange}>
+                <RadioGroup id="dpsPriority" value={dpsOption} onChange={handleDpsChange}>
                     <FormControlLabel value={PrimaryRolePriority.value} control={<Radio/>}
                                       label={PrimaryRolePriority.fullName} disabled={props.disabled === undefined ? false : props.disabled}/>
                     <FormControlLabel value={SecondaryRolePriority.value} control={<Radio/>}
@@ -173,7 +173,7 @@ function RolesFormField(props: any) {
                     disabled={props.disabled === undefined ? false : props.disabled}
                 />
                 <FormLabel component="legend">Role Priority</FormLabel>
-                <RadioGroup aria-label="gender" name="gender1" value={supportOption} onChange={handleSupportChange}>
+                <RadioGroup id="supportPriority" value={supportOption} onChange={handleSupportChange}>
                     <FormControlLabel value={PrimaryRolePriority.value} control={<Radio/>}
                                       label={PrimaryRolePriority.fullName} disabled={props.disabled === undefined ? false : props.disabled}/>
                     <FormControlLabel value={SecondaryRolePriority.value} control={<Radio/>}

@@ -1,5 +1,5 @@
 class StatPlayer {
-    public readonly id: number;
+    public readonly uuid: string;
     public readonly name: string;
     public readonly tankPreference: number;
     public readonly dpsPreference: number;
@@ -10,9 +10,9 @@ class StatPlayer {
     public readonly totalPref: number;
 
 
-    constructor(id: number, name: string, tankPreference: number, dpsPreference: number,
+    constructor(uuid: string, name: string, tankPreference: number, dpsPreference: number,
                 supportPreference: number, tankSr: number, dpsSr: number, supportSr: number, totalPref: number) {
-        this.id = id;
+        this.uuid = uuid;
         this.name = name;
         this.tankPreference = tankPreference;
         this.dpsPreference = dpsPreference;

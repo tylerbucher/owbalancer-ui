@@ -3,8 +3,7 @@ import ClearIcon from "@material-ui/icons/Clear";
 import DoneIcon from "@material-ui/icons/Done";
 import VerifiedUserIcon from "@material-ui/icons/VerifiedUser";
 
-export const DiscordNameHelperText = <i>The user's Discord username. Please refrain from adding the Discord id tag.
-    (Example: TheLegend27, Not TheLegend27#1264)</i>;
+export const DiscordNameHelperText = <i>The name for this player.</i>;
 
 export const OverwatchNamesHelperText1 = <i>The User's in-game name(s). Please refrain from adding
     the blizzard id tag.

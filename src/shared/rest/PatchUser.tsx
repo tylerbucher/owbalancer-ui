@@ -1,18 +1,9 @@
 import {errorSnackBar} from "../../utilities/AxiosSnackBar/AxiosSnackBar";
 import axios from "axios";
-import {CompleteUserModelApi} from "./models/CompleteUserModel";
+import {PatchUserModelApi} from "./models/PatchUserModel";
 
-function postUserUpdate(postRequest: CompleteUserModelApi, props: any, callback: any) {
-    axios.post("/api/v1/users/" + postRequest.id, {
-        username: postRequest.username,
-        overwatchNames: postRequest.owNames,
-        tankSr: postRequest.tankSr,
-        tankPreference: postRequest.tankPreference,
-        dpsSr: postRequest.dpsSr,
-        dpsPreference: postRequest.dpsPreference,
-        supportSr: postRequest.supportSr,
-        supportPreference: postRequest.supportPreference,
-    }, {
+function patchUser(postRequest: PatchUserModelApi, props: any, callback: any) {
+    axios.patch("/api/v1/users", postRequest, {
         responseType: "json",
     }).then(function (response) {
         if (response.status === 200) {
@@ -28,9 +19,9 @@ function postUserUpdate(postRequest: CompleteUserModelApi, props: any, callback:
         errorSnackBar(reason, props, [
             {error: 400, message: "Malformed request"},
             {error: 406, message: "Some submitted data is invalid"},
-            {error: 409, message: "This user already exists"},
+            {error: 409, message: "Internal user error."},
         ]);
     });
 }
 
-export default postUserUpdate;
+export default patchUser;

@@ -1,34 +1,21 @@
-import {DpsRoleDefault, SupportRoleDefault, TankRoleDefault} from "../../forms/FormData";
-
 export interface PostNewUserModelApi {
+    email: string;
     username: string;
-    overwatchNames: Array<string>;
-    tankSr: number;
-    tankPreference: number;
-    dpsSr: number;
-    dpsPreference: number;
-    supportSr: number;
-    supportPreference: number;
+    password: string;
+    passwordConfirm: string;
 }
 
 export class PostNewUserModel implements PostNewUserModelApi {
-    username: string;
-    overwatchNames: Array<string>;
-    tankSr: number;
-    tankPreference: number;
-    dpsSr: number;
-    dpsPreference: number;
-    supportSr: number;
-    supportPreference: number;
 
-    constructor() {
-        this.username = "";
-        this.overwatchNames = new Array<string>();
-        this.tankSr = -1;
-        this.tankPreference = TankRoleDefault;
-        this.dpsSr = -1;
-        this.dpsPreference = DpsRoleDefault;
-        this.supportSr = -1;
-        this.supportPreference = SupportRoleDefault;
+    public email: string;
+    public username: string;
+    public password: string;
+    public passwordConfirm: string;
+
+    constructor(email: string, username: string, password: string, passwordConfirm: string) {
+        this.email = email;
+        this.username = username;
+        this.password = password;
+        this.passwordConfirm = passwordConfirm;
     }
 }

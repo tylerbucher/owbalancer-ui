@@ -7,8 +7,8 @@ import {DiscordNameHelperText} from "./FormData";
 function GetPossibleNames(userList: any, value: string): Array<string> {
     let nameArray = new Array<string>();
     for (let obj of userList) {
-        if (obj.discordName.toUpperCase().includes(value.toUpperCase())) {
-            nameArray.push(obj.discordName);
+        if (obj.playerName.toUpperCase().includes(value.toUpperCase())) {
+            nameArray.push(obj.playerName);
             if (nameArray.length > 4) {
                 break;
             }
@@ -17,14 +17,14 @@ function GetPossibleNames(userList: any, value: string): Array<string> {
     return nameArray;
 }
 
-function DiscordNameFormField(props: any) {
+function PlayerNameFormField(props: any) {
     const [error, setError] = React.useState(false);
     const [errorText, setErrorText] = React.useState("");
 
     const [value, setValue] = React.useState("");
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setValue(event.target.value);
-        props.userModel.username = event.target.value;
+        props.userModel.playerName = event.target.value;
 
         let nameArray = GetPossibleNames(props.basicUserList, event.target.value)
         if (nameArray.length !== 0 && event.target.value.length > 0) {
@@ -50,8 +50,8 @@ function DiscordNameFormField(props: any) {
 
     useEffect(()=>{
         props.submitCallBack.discordNameCallBack = reset;
-        setValue(props.userModel.username);
-    }, [props.submitCallBack.discordNameCallBack, props.userModel.username]);
+        setValue(props.userModel.playerName);
+    }, [props.submitCallBack.discordNameCallBack, props.userModel.playerName]);
     const reset = () => {
         setValue("");
         setError(false);
@@ -62,13 +62,13 @@ function DiscordNameFormField(props: any) {
         <Grid container spacing={1} justify="center">
             <Grid item xs={9} className={props.className}>
                 <Typography variant="h6">
-                    Discord Username
+                    Player Name
                 </Typography>
                 <TextField
                     autoFocus={props.autoFocus === undefined ? false : props.autoFocus}
                     fullWidth
                     id="name"
-                    label="Discord Name"
+                    label="Player Name"
                     type="text"
                     variant="outlined"
                     helperText={error ? errorText : DiscordNameHelperText}
@@ -84,4 +84,4 @@ function DiscordNameFormField(props: any) {
     );
 }
 
-export default DiscordNameFormField;
+export default PlayerNameFormField;

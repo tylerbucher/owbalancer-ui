@@ -1,8 +1,8 @@
 import {errorSnackBar} from "../../utilities/AxiosSnackBar/AxiosSnackBar";
 import axios from "axios";
 
-function deleteUser(id: number, props: any, callback: any) {
-    axios.delete("/api/v1/users/" + id, {
+function deleteUser(email: string, props: any, callback: any) {
+    axios.delete("/api/v1/users/" + email, {
         responseType: "json",
     }).then(function (response) {
         if (response.status === 200) {
@@ -16,9 +16,7 @@ function deleteUser(id: number, props: any, callback: any) {
         }
     }).catch(function (reason) {
         errorSnackBar(reason, props, [
-            {error: 400, message: "Malformed request"},
-            {error: 406, message: "Some submitted data is invalid"},
-            {error: 409, message: "This user already exists"},
+            {error: 400, message: "Malformed request"}
         ]);
     });
 }

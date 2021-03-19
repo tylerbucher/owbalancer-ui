@@ -21,7 +21,7 @@ export class BalanceResponseModel {
         this.balanceList = new Array<Array<TablePlayer>>();
         jsonObj.userList.forEach((arr, index)=>{
             arr.forEach((value => {
-                let tablePlayer = new TablePlayer(0, 0, new StatPlayer(0, "", 0, 0, 0, 0, 0, 0, 0));
+                let tablePlayer = new TablePlayer(0, 0, new StatPlayer("", "", 0, 0, 0, 0, 0, 0, 0));
                 Object.assign(tablePlayer, value);
 
                 if(this.balanceList[index] === undefined) {

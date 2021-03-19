@@ -1,22 +1,22 @@
 export interface BasicTagPlayerModelApi {
-    id: number;
-    overwatchName: string;
-    discordName: string;
+    uuid: string;
+    names: string;
+    playerName: string;
 }
 
 export class BasicTagPlayerModel implements BasicTagPlayerModelApi {
 
-    public readonly id: number;
-    public readonly overwatchName: string;
-    public readonly discordName: string;
+    public readonly uuid: string;
+    public readonly names: string;
+    public readonly playerName: string;
 
-    constructor(id: number, overwatchName: string, discordName: string) {
-        this.id = id;
-        this.overwatchName = overwatchName;
-        this.discordName = discordName;
+    constructor(uuid: string, names: string, playerName: string) {
+        this.uuid = uuid;
+        this.names = names;
+        this.playerName = playerName;
     }
 
     static equals(thisObj: BasicTagPlayerModel, obj: BasicTagPlayerModel): boolean {
-        return thisObj.id === obj.id;
+        return thisObj.uuid === obj.uuid;
     }
 }

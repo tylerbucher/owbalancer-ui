@@ -25,7 +25,7 @@ const useStyles = makeStyles((theme: Theme) =>
         mainContent: {
             height: "100vh",
             display: "flex",
-            flexFlow: "column"
+            flexFlow: "column",
         },
         card: {
             minWidth: "275"
@@ -37,7 +37,8 @@ const useStyles = makeStyles((theme: Theme) =>
             height: "100%",
             display: "flex",
             flexDirection: "column",
-            justifyContent: "center"
+            justifyContent: "center",
+            overflowY: "auto",
         },
         table: {
             minWidth: 750,
@@ -47,7 +48,7 @@ const useStyles = makeStyles((theme: Theme) =>
             '& > *': {
                 marginBottom: theme.spacing(1),
             },
-            backgroundColor: theme.palette.type === 'dark' ? '#333' : '#fff'
+            maxHeight: "100%"
         },
         fRight: {
             display: "contents"
@@ -68,15 +69,15 @@ interface BalanceTableRow {
 export function invertedUserList(userList: Array<BasicUserModelApi>): Array<BasicTagPlayerModelApi> {
     let iUserList = new Array<BasicTagPlayerModelApi>();
     userList.forEach((user) => {
-        iUserList.push(new BasicTagPlayerModel(user.id, user.discordName, user.discordName));
-        user.overwatchNames.forEach((name) => {
-            if (name.toUpperCase() !== user.discordName.toUpperCase()) {
-                iUserList.push(new BasicTagPlayerModel(user.id, name, user.discordName));
+        iUserList.push(new BasicTagPlayerModel(user.uuid, user.playerName, user.playerName));
+        user.names.forEach((name) => {
+            if (name.toUpperCase() !== user.playerName.toUpperCase()) {
+                iUserList.push(new BasicTagPlayerModel(user.uuid, name, user.playerName));
             }
         });
     });
     iUserList.sort((a, b) => {
-        return a.discordName.localeCompare(b.discordName);
+        return a.playerName.localeCompare(b.playerName);
     });
     return iUserList;
 }
@@ -88,12 +89,12 @@ function createMainTableRows(balanceResponse: BalanceResponseModel, users: Array
     });
     balanceResponse.balanceList[currentPage].forEach((player, index) => {
         if (player.team === tableId) {
-            let user = users.find(tag => tag.id === player.user.id)
+            let user = users.find(tag => tag.uuid === player.user.uuid)
             tblRows.push(
                 createData(
                     index,
                     player.getPositionName(),
-                    user !== undefined ? user.overwatchName : player.user.name,
+                    user !== undefined ? user.names : player.user.name,
                     player.getPositionSr(),
                     player.getTankPosIcon(),
                     player.getDpsPosIcon(),
@@ -126,10 +127,6 @@ function createMetaTableRows(balanceResponse: BalanceResponseModel, tableId: num
     tblRows.push(createMetaData("└─ Total SR", (tableId === 1 ? metaResponse.team1TotalSr : metaResponse.team2TotalSr).toString()));
     tblRows.push(createMetaData("Average SR (All roles)", (tableId === 1 ? metaResponse.team1TotalAverageSr : metaResponse.team2TotalAverageSr).toString() + ` (Δ ${currTeamTotal - otherTeamTotal})`));
     tblRows.push(createMetaData("└─ Total SR (All roles)", (tableId === 1 ? metaResponse.team1TotalSrDistribution : metaResponse.team2TotalSrDistribution).toString()));
-    tblRows.push(createMetaData("Adaptability (How well the team can adapt to playing different roles)", (tableId === 1 ? metaResponse.team1Adaptability : metaResponse.team2Adaptability).toString() + "%"));
-    tblRows.push(createMetaData("├─ Tank Adaptability", (tableId === 1 ? metaResponse.team1TankAdaptability : metaResponse.team2TankAdaptability).toString() + "%"));
-    tblRows.push(createMetaData("├─ DPS Adaptability", (tableId === 1 ? metaResponse.team1DpsAdaptability : metaResponse.team2DpsAdaptability).toString() + "%"));
-    tblRows.push(createMetaData("└─ Support Adaptability", (tableId === 1 ? metaResponse.team1SupportAdaptability : metaResponse.team2SupportAdaptability).toString() + "%"));
 
     return tblRows;
 }
@@ -177,15 +174,15 @@ function BalancerTab(props: any) {
 
     return (
         <Container maxWidth="lg" className={classes.root}>
-            <Paper variant="outlined" className={classes.paper}>
+            <div className={classes.paper}>
                 <Grid container spacing={1} justify="center">
                     <Grid item xs={12}>
                         <Autocomplete
                             multiple
                             id="tags-outlined"
                             options={invertedUserList(props.basicUserList)}
-                            getOptionLabel={(option: BasicTagPlayerModelApi) => option.overwatchName}
-                            groupBy={(option: BasicTagPlayerModelApi) => option.discordName}
+                            getOptionLabel={(option: BasicTagPlayerModelApi) => option.names}
+                            groupBy={(option: BasicTagPlayerModelApi) => option.playerName}
                             value={users}
                             getOptionSelected={((option, value) => {
                                 return BasicTagPlayerModel.equals(option, value)
@@ -195,8 +192,8 @@ function BalancerTab(props: any) {
                                 <TextField
                                     {...params}
                                     variant="outlined"
-                                    label={`Selected Users (${numUsers})`}
-                                    placeholder="Selected Users"
+                                    label={`Selected Players (${numUsers})`}
+                                    placeholder="Selected Players"
                                 />
                             )}
                             onChange={(event, value) => {
@@ -234,7 +231,7 @@ function BalancerTab(props: any) {
                         <Pagination count={5} shape="rounded" page={currentPage} onChange={handlePageChange}/>
                     </Grid>
                 </Grid>
-            </Paper>
+            </div>
             <MetadataDrawer open={open} handleClose={toggleDrawer(false)} table1Rows={currentMeta1Rows}
                             table2Rows={currentMeta2Rows}/>
         </Container>
