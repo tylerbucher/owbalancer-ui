@@ -146,11 +146,11 @@ function BalancerTab(props: any) {
         if (balanceResponse !== undefined) {
             setCurrentPage(value);
 
-            setCurrentTable1Rows(createMainTableRows(balanceResponse, users, 1, currentPage - 1));
-            setCurrentTable2Rows(createMainTableRows(balanceResponse, users, 2, currentPage - 1));
+            setCurrentTable1Rows(createMainTableRows(balanceResponse, users, 1, value - 1));
+            setCurrentTable2Rows(createMainTableRows(balanceResponse, users, 2, value - 1));
 
-            setCurrentMeta1Rows(createMetaTableRows(balanceResponse, 1, currentPage - 1));
-            setCurrentMeta2Rows(createMetaTableRows(balanceResponse, 2, currentPage - 1));
+            setCurrentMeta1Rows(createMetaTableRows(balanceResponse, 1, value - 1));
+            setCurrentMeta2Rows(createMetaTableRows(balanceResponse, 2, value - 1));
         }
     };
 
