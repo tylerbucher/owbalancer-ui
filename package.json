@@ -46,6 +46,7 @@
     ]
   },
   "devDependencies": {
+    "@types/minimatch": "^3.0.5",
     "customize-cra": "next",
     "less": "^3.12.2",
     "less-loader": "^7.0.1",

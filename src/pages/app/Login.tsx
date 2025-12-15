@@ -1,4 +1,4 @@
-import React, {ChangeEvent} from "react";
+import React, {ChangeEvent, useEffect} from "react";
 import Grid from "@material-ui/core/Grid";
 import Typography from "@material-ui/core/Typography";
 import Button from "@material-ui/core/Button";
@@ -19,6 +19,7 @@ import IconButton from "@material-ui/core/IconButton";
 import CloseIcon from '@material-ui/icons/Close';
 import {useHistory} from "react-router-dom";
 import {DialogTitle} from "../../components/DialogTitle/DialogTitle";
+import getSandboxMode from "../../shared/rest/GetSandboxMode";
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -51,6 +52,8 @@ function Login(props: any) {
     const [model] = React.useState(new PostAuthenticationModel("", "", false));
     const [rm, setRm] = React.useState(false);
     const [open, setOpen] = React.useState(false);
+    const [email, setEmail] = React.useState("");
+    const [password, setPassword] = React.useState("");
     const handleClickOpen = () => {
         setOpen(true);
     };
@@ -67,10 +70,14 @@ function Login(props: any) {
     };
 
     const handleEmailChange = (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        model.email = event.target.value;
+        const value = event.target.value;
+        setEmail(value);
+        model.email = value;
     };
     const handlePasswordChange = (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        model.password = event.target.value;
+        const value = event.target.value;
+        setPassword(value);
+        model.password = value;
     };
     const handleRememberMeChange = () => {
         model.rememberMe = !model.rememberMe;
@@ -80,6 +87,17 @@ function Login(props: any) {
     const goToAccountCreation = () => {
         history.push("/createAccount");
     }
+
+    useEffect(() => {
+        getSandboxMode(props, (data: any) => {
+            if (data && data.username && data.password) {
+                setEmail(data.username);
+                setPassword(data.password);
+                model.email = data.username;
+                model.password = data.password;
+            }
+        });
+    }, []);
 
     return (
         <Container maxWidth="sm" className={classes.root}>
@@ -99,6 +117,7 @@ function Login(props: any) {
                             label="Email"
                             type="text"
                             variant={"outlined"}
+                            value={email}
                             onChange={handleEmailChange}
                         />
                         <TextField
@@ -107,6 +126,7 @@ function Login(props: any) {
                             label="Password"
                             type="password"
                             variant={"outlined"}
+                            value={password}
                             onChange={handlePasswordChange}
                         />
                         <FormGroup>

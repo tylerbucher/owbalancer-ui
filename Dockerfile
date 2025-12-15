@@ -1,4 +1,4 @@
-FROM node:10-alpine as builder
+FROM node:12-alpine AS builder
 
 # install and cache app dependencies
 COPY package.json package-lock.json ./

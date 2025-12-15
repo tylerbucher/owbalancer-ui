@@ -193,7 +193,7 @@ function BalancerTab(props: any) {
                                     {...params}
                                     variant="outlined"
                                     label={`Selected Players (${numUsers})`}
-                                    placeholder="Selected Players"
+                                    placeholder="Selected Players (need 12)"
                                 />
                             )}
                             onChange={(event, value) => {
@@ -206,7 +206,7 @@ function BalancerTab(props: any) {
                 </Grid>
                 <Grid container spacing={1} justify="center">
                     <Grid item xs={12}>
-                        <Button variant="contained" color="primary" fullWidth onClick={() => {
+                        <Button variant="contained" color="primary" fullWidth disabled={users.length !== 12} onClick={() => {
                             balance(users, props, setResponse)
                         }}>
                             Balance
