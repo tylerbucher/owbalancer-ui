@@ -20,11 +20,7 @@ import {GetUserModelApi} from "../../../shared/rest/models/GetUserModel";
 import patchUser from "../../../shared/rest/PatchUser";
 import {PatchUserModel} from "../../../shared/rest/models/PatchUserModel";
 import deleteUser from "../../../shared/rest/DeleteUser";
-import {
-    internalCanDeleteInvites, internalCanDeleteUsers,
-    internalCanModifyInvites,
-    internalCanModifyUsers, IS_USER_SUPER_ADMIN, isAdmin
-} from "../../../utilities/Permissions";
+import {PostNewPlayerModelApi} from "../../../shared/rest/models/PostNewPlayerModel";
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -46,6 +42,8 @@ const useStyles = makeStyles((theme: Theme) =>
     }),
 );
 
+
+
 function ManageUsers(props: any) {
     const classes = useStyles();
     const [permissions, setPermissions] = React.useState(new Array<GetPermissionModelApi>());
@@ -59,13 +57,10 @@ function ManageUsers(props: any) {
     const [password, setPassword] = React.useState("");
     const [newPermissions, setNewPermissions] = React.useState(new Array<GetPermissionModelApi>());
 
-    const [canModify, setCanModify] = React.useState(!internalCanModifyUsers(props.userModel.permissions));
-    const [canDelete, setCanDelete] = React.useState(!internalCanDeleteUsers(props.userModel.permissions));
-
-    useEffect(() => {
+    /*useEffect(() => {
         getPermissions(props, setPermissions);
         getUsers(props, setUsers);
-    }, [props, setPermissions, setUsers]);
+    }, [props, setPermissions, setUsers]);*/
 
     const onDelete = () => {
         deleteUser(email, props, clear);
@@ -120,11 +115,6 @@ function ManageUsers(props: any) {
                         setEmail(value.email);
                         setUsername(value.username);
                         setNewPermissions(getPermissionValuesFromNumArray(permissions, value.permissions));
-
-                        if(value.permissions.includes(IS_USER_SUPER_ADMIN) && !props.userModel.permissions.includes(IS_USER_SUPER_ADMIN)) {
-                            setCanModify(false);
-                            setCanDelete(false);
-                        }
                     }
                 }}
                 filterSelectedOptions={true}
@@ -140,7 +130,6 @@ function ManageUsers(props: any) {
                     setSelected(!selected);
                 }}
                 className={classes.fullWidth}
-                disabled={canModify || getPermissionValues(newPermissions).includes(IS_USER_SUPER_ADMIN)}
             >
                 <CheckIcon/>
             </ToggleButton>
@@ -157,7 +146,6 @@ function ManageUsers(props: any) {
                 onChange={(event => {
                     setEmail(event.target.value)
                 })}
-                disabled={canModify}
             />
             <Typography variant="h6">
                 Username
@@ -172,7 +160,6 @@ function ManageUsers(props: any) {
                 onChange={(event => {
                     setUsername(event.target.value)
                 })}
-                disabled={canModify}
             />
             <Typography variant="h6">
                 Reset Users Password
@@ -188,7 +175,6 @@ function ManageUsers(props: any) {
                     setPassword(event.target.value)
                 })}
                 helperText={"Upon form submit, the users password will be set to any value in this field."}
-                disabled={canModify}
             />
             <Typography variant="h6">
                 Permissions
@@ -211,16 +197,15 @@ function ManageUsers(props: any) {
                 }}
                 filterSelectedOptions={true}
                 fullWidth
-                disabled={canModify}
             />
             <Grid container spacing={1} justify="center">
                 <Grid item xs={4} className={classes.form}>
-                    <Button variant="contained" color="secondary" fullWidth onClick={onDelete} disabled={canDelete}>
+                    <Button variant="contained" color="secondary" fullWidth onClick={onDelete}>
                         Delete
                     </Button>
                 </Grid>
                 <Grid item xs={8} className={classes.form}>
-                    <Button variant="contained" color="primary" fullWidth onClick={onSubmit} disabled={canModify}>
+                    <Button variant="contained" color="primary" fullWidth onClick={onSubmit}>
                         Submit
                     </Button>
                 </Grid>

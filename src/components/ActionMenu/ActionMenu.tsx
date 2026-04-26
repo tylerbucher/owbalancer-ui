@@ -41,11 +41,6 @@ function ActionMenu(props: any) {
 
     const actions = [
         {
-            icon: <RefreshIcon/>,
-            name: 'Refresh',
-            action: function (props:any){props.onUserListUpdate()},
-            useAuth: true,
-        }, {
             icon: <Brightness3Icon className={classes.moonIcon}/>,
             name: 'Dark Mode',
             action: function (props:any){changeDarkMode(props.parentStateChange);},

@@ -28,6 +28,8 @@ import {AutocompleteRenderGroupParams} from "@material-ui/lab/Autocomplete/Autoc
 import {ListSubheader} from "@material-ui/core";
 import deletePlayer from "../../../shared/rest/DeletePlayer";
 import {internalCanDeletePlayers, internalCanDeleteUsers} from "../../../utilities/Permissions";
+import {PostNewPlayerModel, PostNewPlayerModelApi} from "../../../shared/rest/models/PostNewPlayerModel";
+import {BasicUserModel} from "../../../shared/rest/models/BasicUserModel";
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -61,6 +63,26 @@ class CallBacks {
     public userSelectCallBack: any;
 }
 
+function getPlayerList(): CompleteUserModel[] {
+    const playerString = localStorage.getItem("players");
+    let players: PostNewPlayerModelApi[] = [];
+    if (playerString !== null) {
+        players = JSON.parse(playerString) as PostNewPlayerModelApi[]
+    }
+    return players.map(v => ({
+        uuid: v.userId,
+        playerName: v.playerName,
+        tankPreference: v.tankPreference,
+        dpsPreference: v.dpsPreference,
+        supportPreference: v.supportPreference,
+        tankSr: v.tankSr,
+        dpsSr: v.dpsSr,
+        supportSr: v.supportSr,
+        totalPref: v.tankPreference + v.dpsPreference + v.supportPreference,
+        names: v.names
+    } as CompleteUserModel));
+}
+
 function ManagePlayersTab(props: any) {
     const classes = useStyles();
     const [open, setOpen] = React.useState(false);
@@ -68,7 +90,8 @@ function ManagePlayersTab(props: any) {
     const [disabled, setDisabled] = React.useState(true);
     const [userModel, setUserModel] = React.useState<PatchPlayerModelApi>(new PatchPlayerModel());
     const [callbacks] = React.useState(new CallBacks());
-    const [canDelete, setCanDelete] = React.useState(!internalCanDeletePlayers(props.userModel.permissions));
+    const [players, setPlayers] = React.useState(getPlayerList());
+    const options = React.useMemo(() => players.map(v => new BasicUserModel(v.uuid, v.playerName, v.names)), [players])
 
     const handleClickOpen = () => {
         setOpen(true);
@@ -79,7 +102,15 @@ function ManagePlayersTab(props: any) {
     };
     const handleDelete = () => {
         setOpen(false);
-        deletePlayer(userModel.uuid, props, reset);
+        const playerString = localStorage.getItem("players");
+        let players: PostNewPlayerModelApi[] = [];
+        if (playerString !== null) {
+            players = JSON.parse(playerString) as PostNewPlayerModelApi[]
+        }
+        players.splice(players.findIndex(v => v.userId === userModel.uuid), 1)
+        localStorage.setItem("players", JSON.stringify(players))
+        setPlayers(getPlayerList());
+        reset()
     };
     const reset = () => {
         setAutoValue(null);
@@ -95,18 +126,31 @@ function ManagePlayersTab(props: any) {
         if (callbacks.userSelectCallBack !== undefined) {
             callbacks.userSelectCallBack();
         }
-        props.onUserListUpdate();
         setUserModel(new PatchPlayerModel());
         setDisabled(true);
     };
 
     const handleSubmit = () => {
         if (userModel !== null && userModel !== undefined) {
-            patchPlayer(userModel, props, refresh);
+            const playerString = localStorage.getItem("players");
+            let players: PostNewPlayerModelApi[] = [];
+            if (playerString !== null) {
+                players = JSON.parse(playerString) as PostNewPlayerModelApi[]
+            }
+            players[players.findIndex(v => v.userId === userModel.uuid)] = {
+                userId: userModel.uuid,
+                playerName: userModel.playerName,
+                names: userModel.names,
+                tankSr: userModel.tankSr,
+                tankPreference: userModel.tankPreference,
+                dpsSr: userModel.dpsSr,
+                dpsPreference: userModel.dpsPreference,
+                supportSr: userModel.supportSr,
+                supportPreference: userModel.supportPreference,
+            } as PostNewPlayerModel;
+            localStorage.setItem("players", JSON.stringify(players))
+            setPlayers(getPlayerList());
         }
-    };
-    const refresh = () => {
-        props.onUserListUpdate();
     };
 
     const setNewUserModel = (model: CompleteUserModel) => {
@@ -128,7 +172,7 @@ function ManagePlayersTab(props: any) {
                     <Grid item xs={9} className={classes.form}>
                         <Autocomplete
                             id="combo-box-demo"
-                            options={invertedUserList(props.basicUserList)}
+                            options={invertedUserList(options)}
                             value={autoValue}
                             getOptionLabel={(option: BasicTagPlayerModelApi) => option.names}
                             groupBy={(option: BasicTagPlayerModelApi) => option.uuid}
@@ -137,7 +181,9 @@ function ManagePlayersTab(props: any) {
                             onChange={(event, value: BasicTagPlayerModelApi | null) => {
                                 setAutoValue(value);
                                 if (value !== null) {
-                                    getTotalUserInfoById(value.uuid, props, setNewUserModel);
+                                    setNewUserModel(players.find(v => v.uuid === value.uuid)!)
+                                } else {
+                                    reset()
                                 }
                             }}
                             getOptionSelected={((option, value) => {
@@ -148,14 +194,14 @@ function ManagePlayersTab(props: any) {
                     </Grid>
                 </Grid>
                 <PlayerNameFormField className={classes.form} userModel={userModel} submitCallBack={callbacks}
-                                     basicUserList={props.basicUserList} disabled={disabled}/>
+                                     basicUserList={options} disabled={disabled}/>
                 <OverwatchNamesFormField className={classes.form} userModel={userModel} submitCallBack={callbacks}
-                                         basicUserList={props.basicUserList} disabled={disabled}/>
+                                         basicUserList={options} disabled={disabled}/>
                 <RolesFormField className={classes.form} userModel={userModel} submitCallBack={callbacks}
-                                basicUserList={props.basicUserList} disabled={disabled}/>
+                                basicUserList={options} disabled={disabled}/>
                 <Grid container spacing={1} justify="center">
                     <Grid item xs={3} className={classes.form}>
-                        <Button variant="contained" color="secondary" fullWidth onClick={handleClickOpen} disabled={canDelete || disabled}>
+                        <Button variant="contained" color="secondary" fullWidth onClick={handleClickOpen} disabled={disabled}>
                             Delete
                         </Button>
                     </Grid>

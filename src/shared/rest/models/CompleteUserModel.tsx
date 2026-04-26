@@ -24,6 +24,8 @@ export class CompleteUserModel implements CompleteUserModelApi {
     public totalPref: number;
     public names: Array<string>;
 
+
+
     constructor(input?: string) {
         if (input === undefined) {
             this.uuid = "";

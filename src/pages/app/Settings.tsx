@@ -45,15 +45,7 @@ const useStyles = makeStyles((theme: Theme) =>
 );
 
 function getDefaultItem(props: any) {
-    if(canInviteUsers(props.userModel.permissions)) {
-        return 1;
-    } else if(canModifyInvites(props.userModel.permissions)) {
-        return 2;
-    } else if(canModifyUsers(props.userModel.permissions)) {
-        return 3;
-    } else {
-        return 0;
-    }
+    return 3
 }
 
 function Settings(props: any) {
@@ -84,7 +76,7 @@ function Settings(props: any) {
                 <Grid item xs={3}>
                     <Paper className={classes.paper}>
                         <MenuList>
-                            <MenuItem disabled={!canInviteUsers(props.userModel.permissions)} onClick={() => {
+                            <MenuItem onClick={() => {
                                 setItem(1)
                             }} className={clsx({[classes.selectedMenuItem]: item === 1})}>
                                 <ListItemIcon>
@@ -92,7 +84,7 @@ function Settings(props: any) {
                                 </ListItemIcon>
                                 <Typography variant="inherit">Invite User</Typography>
                             </MenuItem>
-                            <MenuItem disabled={!canModifyInvites(props.userModel.permissions)} onClick={() => {
+                            <MenuItem onClick={() => {
                                 setItem(2)
                             }} className={clsx({[classes.selectedMenuItem]: item === 2})}>
                                 <ListItemIcon>
@@ -100,7 +92,7 @@ function Settings(props: any) {
                                 </ListItemIcon>
                                 <Typography variant="inherit">User Invites</Typography>
                             </MenuItem>
-                            <MenuItem disabled={!canModifyUsers(props.userModel.permissions)} onClick={() => {
+                            <MenuItem onClick={() => {
                                 setItem(3)
                             }} className={clsx({[classes.selectedMenuItem]: item === 3})}>
                                 <ListItemIcon>

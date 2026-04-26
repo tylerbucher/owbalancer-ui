@@ -1,4 +1,3 @@
-import Paper from "@material-ui/core/Paper";
 import Autocomplete from "@material-ui/lab/Autocomplete";
 import TextField from "@material-ui/core/TextField";
 import Container from "@material-ui/core/Container";
@@ -19,6 +18,7 @@ import Pagination from '@material-ui/lab/Pagination';
 import {BasicTagPlayerModel, BasicTagPlayerModelApi} from "../../../shared/models/BasicTagPlayerModel";
 import {BasicUserModelApi} from "../../../shared/rest/models/BasicUserModel";
 import {BalanceResponseModel} from "../../../shared/rest/models/BalanceResponseModel";
+import {PostNewPlayerModelApi} from "../../../shared/rest/models/PostNewPlayerModel";
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -56,6 +56,36 @@ const useStyles = makeStyles((theme: Theme) =>
     }),
 );
 
+interface TopResult {
+    perm: Int8Array;
+    score: number;
+    team1PositionPreferenceCount: number;
+    team2PositionPreferenceCount: number;
+    totalSRDifference: number;
+    team1TotalSr: number;
+    team1AverageSr: number;
+    team1TotalSrDistribution: number;
+    team1TotalAverageSr: number;
+    team2TotalSr: number;
+    team2AverageSr: number;
+    team2TotalSrDistribution: number;
+    team2TotalAverageSr: number;
+}
+
+interface BalanceResult {
+    score: number;
+    team1PositionPreferenceCount: number;
+    team2PositionPreferenceCount: number;
+    totalSRDifference: number;
+    team1TotalSr: number;
+    team1AverageSr: number;
+    team1TotalSrDistribution: number;
+    team1TotalAverageSr: number;
+    team2TotalSr: number;
+    team2AverageSr: number;
+    team2TotalSrDistribution: number;
+    team2TotalAverageSr: number;
+}
 interface BalanceTableRow {
     id?: number;
     role?: string;
@@ -64,6 +94,188 @@ interface BalanceTableRow {
     tank?: JSX.Element;
     dps?: JSX.Element;
     support?: JSX.Element;
+}
+
+function calcSr(sr: number): number {
+    return Math.floor((Math.tan(((Math.PI / 6000) * sr) - (((5.0 / 6.0) * Math.PI) / 2)) * 2500.0) + 2500.0);
+}
+
+function calcTeamRoleDifference(
+    div: number,
+    perm: Int8Array,
+    players: PostNewPlayerModelApi[]
+): {
+    score: number;
+    totalSRDifference: number;
+    team1TotalSr: number;
+    team1AverageSr: number;
+    team1TotalSrDistribution: number;
+    team1TotalAverageSr: number;
+    team2TotalSr: number;
+    team2AverageSr: number;
+    team2TotalSrDistribution: number;
+    team2TotalAverageSr: number;
+} {
+    // Raw SR (for totals/averages)
+    const team1RawTankSr    = players[perm[0]].tankSr       + players[perm[1]].tankSr;
+    const team1RawDpsSr     = players[perm[2]].dpsSr        + players[perm[3]].dpsSr;
+    const team1RawSupportSr = players[perm[4]].supportSr    + players[perm[5]].supportSr;
+
+    const team2RawTankSr    = players[perm[6]].tankSr       + players[perm[7]].tankSr;
+    const team2RawDpsSr     = players[perm[8]].dpsSr        + players[perm[9]].dpsSr;
+    const team2RawSupportSr = players[perm[10]].supportSr   + players[perm[11]].supportSr;
+
+    // Calc SR (for balance scoring)
+    const team1TankSr    = calcSr(players[perm[0]].tankSr)    + calcSr(players[perm[1]].tankSr);
+    const team1DpsSr     = calcSr(players[perm[2]].dpsSr)     + calcSr(players[perm[3]].dpsSr);
+    const team1SupportSr = calcSr(players[perm[4]].supportSr) + calcSr(players[perm[5]].supportSr);
+    const team1Sr        = team1TankSr + team1DpsSr + team1SupportSr;
+
+    const team2TankSr    = calcSr(players[perm[6]].tankSr)    + calcSr(players[perm[7]].tankSr);
+    const team2DpsSr     = calcSr(players[perm[8]].dpsSr)     + calcSr(players[perm[9]].dpsSr);
+    const team2SupportSr = calcSr(players[perm[10]].supportSr) + calcSr(players[perm[11]].supportSr);
+    const team2Sr        = team2TankSr + team2DpsSr + team2SupportSr;
+
+    const totalSRDifference =
+        Math.abs(team1TankSr    - team2TankSr)    +
+        Math.abs(team1DpsSr     - team2DpsSr)     +
+        Math.abs(team1SupportSr - team2SupportSr);
+
+    const maxSr = Math.max(team1Sr, team2Sr);
+    const score = ((maxSr - totalSRDifference) * div) / maxSr;
+
+    // Role SR totals (raw, for display)
+    const team1TotalSr             = team1RawTankSr + team1RawDpsSr + team1RawSupportSr;
+    const team2TotalSr             = team2RawTankSr + team2RawDpsSr + team2RawSupportSr;
+
+    // TotalSrDistribution = sum of each player's raw SR across all roles
+    const team1TotalSrDistribution =
+        players[perm[0]].tankSr + players[perm[0]].dpsSr + players[perm[0]].supportSr +
+        players[perm[1]].tankSr + players[perm[1]].dpsSr + players[perm[1]].supportSr +
+        players[perm[2]].tankSr + players[perm[2]].dpsSr + players[perm[2]].supportSr +
+        players[perm[3]].tankSr + players[perm[3]].dpsSr + players[perm[3]].supportSr +
+        players[perm[4]].tankSr + players[perm[4]].dpsSr + players[perm[4]].supportSr +
+        players[perm[5]].tankSr + players[perm[5]].dpsSr + players[perm[5]].supportSr;
+
+    const team2TotalSrDistribution =
+        players[perm[6]].tankSr  + players[perm[6]].dpsSr  + players[perm[6]].supportSr  +
+        players[perm[7]].tankSr  + players[perm[7]].dpsSr  + players[perm[7]].supportSr  +
+        players[perm[8]].tankSr  + players[perm[8]].dpsSr  + players[perm[8]].supportSr  +
+        players[perm[9]].tankSr  + players[perm[9]].dpsSr  + players[perm[9]].supportSr  +
+        players[perm[10]].tankSr + players[perm[10]].dpsSr + players[perm[10]].supportSr +
+        players[perm[11]].tankSr + players[perm[11]].dpsSr + players[perm[11]].supportSr;
+
+    return {
+        score,
+        totalSRDifference,
+        team1TotalSr,
+        team1AverageSr:          Math.round(team1TotalSr / 6),
+        team1TotalSrDistribution,
+        team1TotalAverageSr:     Math.round(team1TotalSrDistribution / 6),
+        team2TotalSr,
+        team2AverageSr:          Math.round(team2TotalSr / 6),
+        team2TotalSrDistribution,
+        team2TotalAverageSr:     Math.round(team2TotalSrDistribution / 6),
+    };
+}
+
+function calcTeamPrimaryPosition(
+    offset: number,
+    perm: Int8Array,
+    players: PostNewPlayerModelApi[]
+): number {
+    return players[perm[offset]].tankPreference +
+        players[perm[offset + 1]].tankPreference +
+        players[perm[offset + 2]].dpsPreference +
+        players[perm[offset + 3]].dpsPreference +
+        players[perm[offset + 4]].supportPreference +
+        players[perm[offset + 5]].supportPreference;
+}
+
+function calcPlayerPrimaryScore(
+    div: number,
+    perm: Int8Array,
+    players: PostNewPlayerModelApi[]
+): { score: number; team1PositionPreferenceCount: number; team2PositionPreferenceCount: number } {
+    const team1PositionPreferenceCount = calcTeamPrimaryPosition(0, perm, players);
+    const team2PositionPreferenceCount = calcTeamPrimaryPosition(6, perm, players);
+    const score = ((team1PositionPreferenceCount + team2PositionPreferenceCount) * div) / 24.0;
+
+    return { score, team1PositionPreferenceCount, team2PositionPreferenceCount };
+}
+
+
+
+function mbalance(perm: Int8Array, players: PostNewPlayerModelApi[]): BalanceResult {
+    const roleResult = calcTeamRoleDifference(1, perm, players);
+    const prefResult = calcPlayerPrimaryScore(2, perm, players);
+    return {
+        score: roleResult.score + prefResult.score,
+        team1PositionPreferenceCount: prefResult.team1PositionPreferenceCount,
+        team2PositionPreferenceCount: prefResult.team2PositionPreferenceCount,
+        totalSRDifference:            roleResult.totalSRDifference,
+        team1TotalSr:                 roleResult.team1TotalSr,
+        team1AverageSr:               roleResult.team1AverageSr,
+        team1TotalSrDistribution:     roleResult.team1TotalSrDistribution,
+        team1TotalAverageSr:          roleResult.team1TotalAverageSr,
+        team2TotalSr:                 roleResult.team2TotalSr,
+        team2AverageSr:               roleResult.team2AverageSr,
+        team2TotalSrDistribution:     roleResult.team2TotalSrDistribution,
+        team2TotalAverageSr:          roleResult.team2TotalAverageSr,
+    };
+}
+
+// Maps flat perm index to [team, position]
+const PERM_SLOT_MAP: number[][] = [
+    [1, 0], [1, 0],
+    [1, 1], [1, 1],
+    [1, 2], [1, 2],
+    [2, 0], [2, 0],
+    [2, 1], [2, 1],
+    [2, 2], [2, 2],
+];
+
+function convertToResponse(perms: TopResult[], players: PostNewPlayerModelApi[]): string {
+    const userList = perms.map(result =>
+        Array.from(result.perm).map((playerIdx, slotIdx) => {
+            const player = players[playerIdx];
+            const team = PERM_SLOT_MAP[slotIdx][0];
+            const position = PERM_SLOT_MAP[slotIdx][1];
+            return {
+                team,
+                position,
+                user: {
+                    uuid: player.userId,
+                    playerName: player.playerName,
+                    tankPreference: player.tankPreference,
+                    supportPreference: player.supportPreference,
+                    dpsPreference: player.dpsPreference,
+                    tankSr: player.tankSr,
+                    supportSr: player.supportSr,
+                    dpsSr: player.dpsSr,
+                    names: player.names,
+                },
+            };
+        })
+    );
+
+    const balancerMeta = perms.map(result => ({
+        balanceScore:                  result.score,
+        balanceTime:                   0,
+        team1PositionPreferenceCount:  result.team1PositionPreferenceCount,
+        team2PositionPreferenceCount:  result.team2PositionPreferenceCount,
+        totalSRDifference:             result.totalSRDifference,
+        team1TotalSr:                  result.team1TotalSr,
+        team1AverageSr:                result.team1AverageSr,
+        team1TotalSrDistribution:      result.team1TotalSrDistribution,
+        team1TotalAverageSr:           result.team1TotalAverageSr,
+        team2TotalSr:                  result.team2TotalSr,
+        team2AverageSr:                result.team2AverageSr,
+        team2TotalSrDistribution:      result.team2TotalSrDistribution,
+        team2TotalAverageSr:           result.team2TotalAverageSr,
+    }));
+
+    return JSON.stringify({ version: "v1", userList, balancerMeta });
 }
 
 export function invertedUserList(userList: Array<BasicUserModelApi>): Array<BasicTagPlayerModelApi> {
@@ -172,6 +384,39 @@ function BalancerTab(props: any) {
         setCurrentMeta2Rows(createMetaTableRows(balanceResponse, 2, currentPage - 1));
     };
 
+    function jsBalance() {
+        const perms: Int8Array[] = props.permArray;
+        const top: TopResult[] = [];
+
+        const playerString = localStorage.getItem("players");
+        let players: PostNewPlayerModelApi[] = [];
+        if (playerString !== null) {
+            players = JSON.parse(playerString) as PostNewPlayerModelApi[];
+        }
+        const sPlayers: PostNewPlayerModelApi[] = users.map(v => players.find(f => f.userId === v.uuid)!);
+
+        for (let i = 0; i < perms.length; i++) {
+            const perm = perms[i];
+            const result = mbalance(perm, sPlayers);
+
+            if (top.length < 5) {
+                top.push({ perm, ...result });
+                if (top.length === 5) {
+                    top.sort((a, b) => a.score - b.score);
+                }
+            } else if (result.score > top[0].score) {
+                top[0] = { perm, ...result };
+                top.sort((a, b) => a.score - b.score);
+            }
+        }
+
+        const sortedVals = top.sort((a, b) => b.score - a.score);
+        const response: string = convertToResponse(sortedVals, sPlayers);
+        console.log(JSON.parse(response))
+        let balanceResponse = new BalanceResponseModel(response); // removed double JSON.stringify
+        setResponse(balanceResponse);
+    }
+
     return (
         <Container maxWidth="lg" className={classes.root}>
             <div className={classes.paper}>
@@ -207,7 +452,7 @@ function BalancerTab(props: any) {
                 <Grid container spacing={1} justify="center">
                     <Grid item xs={12}>
                         <Button variant="contained" color="primary" fullWidth disabled={users.length !== 12} onClick={() => {
-                            balance(users, props, setResponse)
+                            jsBalance()
                         }}>
                             Balance
                         </Button>

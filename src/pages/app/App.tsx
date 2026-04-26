@@ -13,11 +13,9 @@ import getBasicUserList from "../../shared/rest/GetBasicUserList";
 import BalancerTab from "./tabs/BalancerTab";
 import AddPlayerTab from "./tabs/AddPlayerTab";
 import ManagePlayersTab from "./tabs/ManagePlayersTab";
-import {BasicUserModelApi} from "../../shared/rest/models/BasicUserModel";
+import {BasicUserModel, BasicUserModelApi} from "../../shared/rest/models/BasicUserModel";
 import getAuthentication from "../../shared/rest/GetAuthentication";
 import {BrowserRouter as Router, Redirect, Route, Switch} from "react-router-dom";
-import Login from "./Login";
-import CreateAccount from "./CreateAccount";
 import Settings from "./Settings";
 import {getCGBAuthToken, prefersDarkMode} from "../../utilities/CookieHelper";
 import GetUserModel, {GetUserModelApi} from "../../shared/rest/models/GetUserModel";
@@ -29,6 +27,25 @@ import {
     canSeeManagePlayersTab,
     canSeeSettingsTab
 } from "../../utilities/Permissions";
+import {PostNewPlayerModelApi} from "../../shared/rest/models/PostNewPlayerModel";
+
+export async function loadPermutations(url: string): Promise<Int8Array[]> {
+    const response = await fetch(url);
+    const buffer = await response.arrayBuffer();
+    const flat = new Int8Array(buffer);
+
+    const permLength = 12;
+    const count = flat.length / permLength;
+    const permutations: Int8Array[] = new Array(count);
+
+    for (let i = 0; i < count; i++) {
+        const offset = i * permLength;
+        // Slice gives a view with no extra allocation
+        permutations[i] = flat.slice(offset, offset + permLength);
+    }
+
+    return permutations;
+}
 
 const useStyles = makeStyles((theme: Theme) =>
     createStyles({
@@ -60,20 +77,9 @@ const useStyles = makeStyles((theme: Theme) =>
 
 function getTabs(userModel: GetUserModelApi | undefined): Array<JSX.Element> {
     let tabs = new Array<JSX.Element>();
-    if (userModel !== undefined) {
-        if (canSeeBalancerTab(userModel.permissions)) {
-            tabs.push(<Tab label="Balancer"/>);
-        }
-        if (canSeeAddPlayersTab(userModel.permissions)) {
-            tabs.push(<Tab label="Add Player"/>);
-        }
-        if (canSeeManagePlayersTab(userModel.permissions)) {
-            tabs.push(<Tab label="Manage Players"/>);
-        }
-        if (canSeeSettingsTab(userModel.permissions)) {
-            tabs.push(<Tab label="Settings"/>);
-        }
-    }
+    tabs.push(<Tab label="Balancer"/>);
+    tabs.push(<Tab label="Add Player"/>);
+    tabs.push(<Tab label="Manage Players"/>);
     return tabs;
 }
 
@@ -81,39 +87,34 @@ function getTabData(userModel: GetUserModelApi | undefined,
                     value: number,
                     userList: Array<BasicUserModelApi>,
                     userUpdate: any,
-                    classes: any): Array<JSX.Element> {
+                    classes: any,
+                    permArray: any): Array<JSX.Element> {
     let tabs = new Array<JSX.Element>();
-    if (userModel !== undefined) {
-        if (canSeeBalancerTab(userModel.permissions)) {
-            tabs.push(
-                <TabPanel value={value} index={tabs.length} variant={"center"}>
-                    <BalancerTab basicUserList={userList}/>
-                </TabPanel>
-            );
-        }
-        if (canSeeAddPlayersTab(userModel.permissions)) {
-            tabs.push(
-                <TabPanel value={value} index={tabs.length} variant={"center"}>
-                    <AddPlayerTab basicUserList={userList} onUserListUpdate={userUpdate} userModel={userModel}/>
-                </TabPanel>
-            );
-        }
-        if (canSeeManagePlayersTab(userModel.permissions)) {
-            tabs.push(
-                <TabPanel value={value} index={tabs.length} variant={"center"}>
-                    <ManagePlayersTab basicUserList={userList} onUserListUpdate={userUpdate} userModel={userModel}/>
-                </TabPanel>
-            );
-        }
-        if (canSeeSettingsTab(userModel.permissions)) {
-            tabs.push(
-                <TabPanel value={value} index={tabs.length} variant={"center"}>
-                    <Settings userModel={userModel}/>
-                </TabPanel>
-            );
-        }
-    }
+    tabs.push(
+        <TabPanel value={value} index={tabs.length} variant={"center"}>
+            <BalancerTab basicUserList={userList} permArray={permArray}/>
+        </TabPanel>
+    );
+    tabs.push(
+        <TabPanel value={value} index={tabs.length} variant={"center"}>
+            <AddPlayerTab basicUserList={userList} onUserListUpdate={userUpdate} userModel={userModel}/>
+        </TabPanel>
+    );
+    tabs.push(
+        <TabPanel value={value} index={tabs.length} variant={"center"}>
+            <ManagePlayersTab basicUserList={userList} onUserListUpdate={userUpdate} userModel={userModel}/>
+        </TabPanel>
+    );
     return tabs;
+}
+
+function getUserList() {
+    const playerString = localStorage.getItem("players");
+    let players: PostNewPlayerModelApi[] = [];
+    if (playerString !== null) {
+        players = JSON.parse(playerString) as PostNewPlayerModelApi[]
+    }
+    return players.map(v => new BasicUserModel(v.userId, v.playerName, v.names))
 }
 
 function App(props: any) {
@@ -122,53 +123,8 @@ function App(props: any) {
     const systemPreference = useMediaQuery('(prefers-color-scheme: dark)');
     const [darkMode, setDarkMode] = React.useState(prefersDarkMode(systemPreference));
     const [value, setValue] = React.useState(0);
-    const [authenticated, setAuthenticated] = React.useState(false);
-    const [authActive, setAuthActive] = React.useState(false);
-    const [userActive, setUserActive] = React.useState(false);
-    const [canSeePlayers, setCanSeePlayers] = React.useState(false);
-    const [userModel, setUserModel] = React.useState<GetUserModelApi>(new GetUserModel("", "", false, [], -1, 0));
-    const [userList, setUserList] = React.useState(new Array<BasicUserModelApi>());
-
-    const handleGetPlayersCallback = useCallback((userModel: GetUserModel) => {
-            setUserModel(userModel);
-            setUserActive(true)
-            let cc = canSeeBalancerTab(userModel.permissions) || canAddMorePlayers(userModel.permissions) || canSeeManagePlayersTab(userModel.permissions)
-            setCanSeePlayers(cc);
-            if (cc) {
-                if (userList.length === 0) {
-                    getBasicUserList(false, setUserList, props);
-                }
-            }
-        }, [props, userList.length]
-    );
-
-    const handleUserCallback = useCallback(() => {
-            getUser(props, handleGetPlayersCallback);
-        }, [handleGetPlayersCallback, props]
-    );
-
-    const handleAuthCallback = useCallback(
-        (val: boolean) => {
-            if (val) {
-                handleUserCallback();
-            }
-            setAuthenticated(val);
-            setAuthActive(true);
-        }, [handleUserCallback]
-    );
-
-
-    useEffect(() => {
-        let cgbToken = getCGBAuthToken();
-        if (cgbToken !== undefined) {
-            if (!authActive) {
-                getAuthentication(props, handleAuthCallback);
-            }
-        } else {
-            handleAuthCallback(false);
-        }
-    }, [props, handleAuthCallback, authActive]);
-
+    const userList = getUserList();
+    const [permArray, setPermArray] = React.useState<Int8Array[]>([]);
 
     const handleChange = (event: React.ChangeEvent<{}>, newValue: number) => {
         setValue(newValue);
@@ -178,9 +134,11 @@ function App(props: any) {
         setDarkMode(val);
     };
 
-    const userUpdate = () => {
-        getBasicUserList(true, setUserList, props)
-    };
+    useEffect(() => {
+        loadPermutations("/data.bin").then(v => {
+            setPermArray(v)
+        })
+    }, [setPermArray]);
 
     const theme = React.useMemo(
         () =>
@@ -211,49 +169,23 @@ function App(props: any) {
         <ThemeProvider theme={theme}>
             <CssBaseline/>
             <div id={"App"} className={classes.mainContent}>
-                <ActionMenu parentStateChange={handleDarkMode} onUserListUpdate={userUpdate}
-                            authenticated={canSeePlayers}/>
+                <ActionMenu parentStateChange={handleDarkMode} onUserListUpdate={undefined}
+                            authenticated={true}/>
                 <Router>
                     <Switch>
-                        <Route path="/login">
-                            {authActive ? authenticated ? (
-                                <Redirect to="/"/>
-                            ) : (
-                                <Login onAuth={handleAuthCallback}/>
-                            ) : (
-                                <div/>
-                            )}
-                        </Route>
-                        <Route path="/createAccount">
-                            {authActive ? authenticated ? (
-                                <Redirect to="/"/>
-                            ) : (
-                                <CreateAccount/>
-                            ) : (
-                                <div/>
-                            )}
-                        </Route>
                         <Route path="/">
-                            {authActive ? authenticated ? userActive ? (
-                                <div id="tabHolder" className={classes.mainContent}>
-                                    <Tabs
-                                        value={value}
-                                        onChange={handleChange}
-                                        indicatorColor="primary"
-                                        textColor="primary"
-                                        centered
-                                    >
-                                        {getTabs(userModel)}
-                                    </Tabs>
-                                    {getTabData(userModel, value, userList, userUpdate, classes)}
-                                </div>
-                            ) : (
-                                <div/>
-                            ) : (
-                                <Redirect to="/login"/>
-                            ) : (
-                                <div/>
-                            )}
+                            <div id="tabHolder" className={classes.mainContent}>
+                                <Tabs
+                                    value={value}
+                                    onChange={handleChange}
+                                    indicatorColor="primary"
+                                    textColor="primary"
+                                    centered
+                                >
+                                    {getTabs(undefined)}
+                                </Tabs>
+                                {getTabData(undefined, value, userList, undefined, classes, permArray)}
+                            </div>
                         </Route>
                     </Switch>
                 </Router>
